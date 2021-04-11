@@ -1,3 +1,5 @@
+package phase1.HtmlHighlighter;
+
 public class testClass {
     public static void main(String[] args) {
         HtmlHighlighter htmlHighlighter = new HtmlHighlighter();

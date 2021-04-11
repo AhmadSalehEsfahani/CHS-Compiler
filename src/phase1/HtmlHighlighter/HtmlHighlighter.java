@@ -1,3 +1,5 @@
+package phase1.HtmlHighlighter;
+
 import java.io.FileWriter;
 import java.io.IOException;
 
