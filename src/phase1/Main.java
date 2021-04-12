@@ -12,6 +12,7 @@ public class Main{
 
         while(true){
             String token = lexer.next_token();
+
             if(lexer.yyatEOF()){
                 break;
             }
