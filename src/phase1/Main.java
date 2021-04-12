@@ -14,7 +14,6 @@ public class Main{
             String token = lexer.next_token();
 
             if(lexer.yyatEOF()){
-                System.out.println("**");
                 Lexer.htmlHighlighter.endFile();
                 break;
             }
