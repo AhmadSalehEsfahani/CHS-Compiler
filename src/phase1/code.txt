@@ -1,10 +1,16 @@
-int id_1 = 1234
-real id_2 = 12.12E-21
+/*
+test for comment
+*/
+
+int id_1 <- 1234
+real id_2 <- 12.12E-21
 
 if(id_1 >= id_2){
-    real id_3 = 0X14FE3
+    real id_3 <- 0X14FE3
 }
 
-for(int i = 12; i >= 12: i--){
-    String str = "hello my compiler !!!"
+//it is for
+
+for(int i <- 12; i >= 12: i--){
+    string str <- "hello my compiler !!!"
 }

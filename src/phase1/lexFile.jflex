@@ -15,7 +15,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
 
 
 %{
-    HtmlHighlighter htmlHighlighter = new HtmlHighlighter();
+    public static HtmlHighlighter htmlHighlighter = new HtmlHighlighter();
     StringBuilder number = new StringBuilder(""); 
 %}
 
@@ -26,9 +26,10 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
  TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
     // Comment can be the last line of the file, without line terminator.
  EndOfLineComment     = "//" {InputCharacter}*
+ Comment = {TraditionalComment} | {EndOfLineComment}
 
 
- ReservedWord = [void|int|real|bool|string|for|while|if|else|return|break|rof|let|fi|array|void|in_string|out_string|new|continue|loop|pull|in_int|out_int|then|len]
+ ReservedWord = "void"|"int"|"real"|"bool"|"string"|"for"|"while"|"if"|"else"|"return"|"break"|"rof"|"let"|"fi"|"array"|"in_string"|"out_string"|"new"|"continue"|"loop"|"pull"|"in_int"|"out_int"|"then"|"len"
 
 
  Identifier = [a-zA-Z][a-zA-Z0-9_]{0,30}
@@ -37,7 +38,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
 
 
 
- Operators = [\+|\*|\-|\/|\+=|\-=|\*=|\/=|\+\+|\-\-|<|<=|>|>=|==|\!=|<\-|%|\&\&|\|\||&|\||\^|\!|\.|,|;|\[|\]|\{|\}|\(|\)]
+ Operators = "+"|"*"|"-"|"/"|"+="|"-="|"*="|"/="|"++"|"--"|"<"|"<="|">"|">="|"=="|"!="|"<-"|"%"|"&&"|"||"|"&"|"|"|"^"|"!"|"."|","|";"|"["|"]"|"{"|"}"|"("|")"
 
 %state STRING
 %state ZERO
@@ -61,19 +62,31 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
             htmlHighlighter.Identifiers(yytext());
         }
 
+        {Comment} {
+            htmlHighlighter.comments(yytext());
+        }
+
         "\"" {
             htmlHighlighter.operatorsAndPunctuations("\"");
             yybegin(STRING);
         }
 
         "0" {
-            number.append(yytext());
+            htmlHighlighter.integerNumbers(yytext());
             yybegin(ZERO);
         }
 
         [1-9] {
             number.append(yytext());
             yybegin(INTEGER);
+        }
+
+        [ ] {
+            htmlHighlighter.space();
+        }
+
+        [\n] {
+            htmlHighlighter.newLine();
         }
     }
 
@@ -82,6 +95,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
             htmlHighlighter.stringsAndCharacters(yytext());
         }
         "\"" {
+            htmlHighlighter.operatorsAndPunctuations("\"");
             yybegin(YYINITIAL);
         }
     }
@@ -92,7 +106,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
             yybegin(INTEGER);
         }
         x|X {
-            number.append(yytext());
+            htmlHighlighter.specialCharacters(yytext());
             yybegin(HEX);
         }
         "." {
