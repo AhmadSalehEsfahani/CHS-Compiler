@@ -29,10 +29,7 @@ import java_cup.runtime.*;
  EndOfLineComment     = "//" {InputCharacter}*
 
 
- ReservedWord = "void" | "int" | "real" | "bool" | "string" | "for" | "while" | "if" | "else"
-                | "return" | "break" | "rof" | "let" | "fi" | "array" | "void" | "in_string"
-                | "out_string" | "new" | "continue" | "loop" | "pull" | "in_int" | "out_int"
-                 | "then" | "len"
+ ReservedWord = [void|int|real|bool|string|for|while|if|else|return|break|rof|let|fi|array|void|in_string|out_string|new|continue|loop|pull|in_int|out_int|then|len]
 
 
  Identifier = [a-zA-Z][a-zA-Z0-9_]{0,30}
@@ -41,7 +38,7 @@ import java_cup.runtime.*;
 
 
 
- Operators = "+" 
+ Operators = [\+|\*|\-|\/|\+=|\-=|\*=|\/=|\+\+|\-\-|<|<=|>|>=|==|\!=|<\-|%|\&\&|\|\||&|\||\^|\!|\.|,|;|\[|\]|\{|\}|\(|\)]
 
 %state STRING
 %state ZERO
@@ -53,7 +50,7 @@ import java_cup.runtime.*;
 %%
 
     <YYINITIAL>{
-        ReservedWord{
+        {ReservedWord}{
             htmlHighlighter.reservedKeyWords(yytext());
         }
 
@@ -83,7 +80,7 @@ import java_cup.runtime.*;
 
     <STRING>{
         {StringPattern}{
-
+            HtmlHighlighter.stringsAndCharacters(yytext());
         }
         "\""{
             yybegin(YYINITIAL);
