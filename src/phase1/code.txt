@@ -6,7 +6,7 @@ int id_1 <- 1234
 real id_2 <- 12.12E-21
 
 if(id_1 >= id_2){
-    real id_3 <- 0X14FE3
+    hex id_3 <- 0X14FE3
 }
 
 //it is for

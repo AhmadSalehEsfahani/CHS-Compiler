@@ -122,7 +122,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
             number.setLength(0);
             yybegin(YYINITIAL);
         }
-        "." {
+        [0-9]*[.] {
             number.append(yytext());
             yybegin(REAL);
         }
@@ -130,7 +130,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
 
     <REAL> {
 
-        [0-9]*E[-|+]?[(0-9)]+ {
+        [0-9]*E[\-|+]?[(0-9)]+ {
             number.append(yytext());
             htmlHighlighter.realNumbers(number.toString());
             number.setLength(0);
@@ -145,7 +145,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
     }
 
     <HEX> {
-        [0-9a-fA-F]* {
+        [0-9a-fA-F]+ {
             number.append(yytext());
             htmlHighlighter.integerNumbers(number.toString());
             number.setLength(0);
