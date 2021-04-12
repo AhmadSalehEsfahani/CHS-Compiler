@@ -1,5 +1,5 @@
-import HtmlHighlighter.HtmlHighlighter;
-import java_cup.runtime.*;
+package phase1;
+import phase1.HtmlHighlighter.HtmlHighlighter;
 
 
 
@@ -10,7 +10,6 @@ import java_cup.runtime.*;
 %unicode
 %type String
 %function next_token
-%cup
 %line
 %column
 
@@ -49,93 +48,97 @@ import java_cup.runtime.*;
 
 %%
 
-    <YYINITIAL>{
-        {ReservedWord}{
+    <YYINITIAL> {
+        {ReservedWord} {
             htmlHighlighter.reservedKeyWords(yytext());
         }
 
-        {Operators}{
+        {Operators} {
             htmlHighlighter.operatorsAndPunctuations(yytext());
         }
 
-        {Identifier}{
+        {Identifier} {
             htmlHighlighter.Identifiers(yytext());
         }
 
-        "\""{
+        "\"" {
             htmlHighlighter.operatorsAndPunctuations("\"");
             yybegin(STRING);
         }
 
-        "0"{
+        "0" {
             number.append(yytext());
             yybegin(ZERO);
         }
 
-        {[1-9]}{
+        [1-9] {
             number.append(yytext());
             yybegin(INTEGER);
         }
     }
 
-    <STRING>{
-        {StringPattern}{
-            HtmlHighlighter.stringsAndCharacters(yytext());
+    <STRING> {
+        {StringPattern} {
+            htmlHighlighter.stringsAndCharacters(yytext());
         }
-        "\""{
+        "\"" {
             yybegin(YYINITIAL);
         }
     }
 
-    <ZERO>{
-        {[0-9]}{
+    <ZERO> {
+        [0-9] {
             number.append(yytext());
             yybegin(INTEGER);
         }
-        {x|X}{
+        x|X {
             number.append(yytext());
             yybegin(HEX);
         }
-        "."{
+        "." {
             number.append(yytext());
             yybegin(REAL);
         }
     }
 
-    <INTEGER>{
-        {[0-9]*}{
+    <INTEGER> {
+        [0-9]* {
             number.append(yytext());
-            HtmlHighlighter.integerNumbers(number.toString());
+            htmlHighlighter.integerNumbers(number.toString());
             number.setLength(0);
             yybegin(YYINITIAL);
         }
-        "."{
+        "." {
             number.append(yytext());
             yybegin(REAL);
         }
     }
 
-    <REAL>{
+    <REAL> {
 
-        {[0-9]*E[-|+]?[(0-9)]+}{
+        [0-9]*E[-|+]?[(0-9)]+ {
             number.append(yytext());
-            HtmlHighlighter.realNumbers(number.toString());
+            htmlHighlighter.realNumbers(number.toString());
             number.setLength(0);
             yybegin(YYINITIAL);
         }
-        {[0-9]*}{
+        [0-9]* {
             number.append(yytext());
-            HtmlHighlighter.realNumbers(number.toString());
+            htmlHighlighter.realNumbers(number.toString());
             number.setLength(0);
             yybegin(YYINITIAL);
         }
     }
 
-    <HEX>{
-        {[0-9a-fA-F]*}{
+    <HEX> {
+        [0-9a-fA-F]* {
             number.append(yytext());
-            HtmlHighlighter.integerNumbers(number.toString());
+            htmlHighlighter.integerNumbers(number.toString());
             number.setLength(0);
             yybegin(YYINITIAL);
         }
+    }
+
+    [^] {
+        htmlHighlighter.undefinedToken(yytext());
     }

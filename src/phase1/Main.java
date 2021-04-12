@@ -7,7 +7,7 @@ public class Main{
 
     public static void main(String[] args) throws IOException {
         
-        final String fileAddress = "code.txt";
+        final String fileAddress = "src/phase1/code.txt";
         Lexer lexer = new Lexer(new FileReader(fileAddress));
 
         while(true){
