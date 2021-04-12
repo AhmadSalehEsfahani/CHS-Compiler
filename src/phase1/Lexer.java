@@ -320,7 +320,7 @@ class Lexer {
   private boolean zzEOFDone;
 
   /* user code: */
-    HtmlHighlighter htmlHighlighter = new HtmlHighlighter();
+    public static HtmlHighlighter htmlHighlighter = new HtmlHighlighter();
     StringBuilder number = new StringBuilder(""); 
 
 
