@@ -4,13 +4,14 @@
 
 package lexer;
 import lexer.HtmlHighlighter.HtmlHighlighter;
+import parser.Lexical;
 
-
+import java.io.IOException;
 
 
 // See https://github.com/jflex-de/jflex/issues/222
 @SuppressWarnings("FallThrough")
-class Lexer {
+class Lexer implements Lexical {
 
   /** This character denotes the end of file. */
   public static final int YYEOF = -1;
@@ -960,4 +961,13 @@ class Lexer {
   }
 
 
+  @Override
+  public String nextToken() {
+    try {
+      return next_token();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
 }
