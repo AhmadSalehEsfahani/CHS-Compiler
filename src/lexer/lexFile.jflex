@@ -1,6 +1,5 @@
-package phase1;
-import phase1.HtmlHighlighter.HtmlHighlighter;
-
+package lexer;
+import lexer.HtmlHighlighter.HtmlHighlighter;
 
 
 
@@ -17,6 +16,7 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
 %{
     public static HtmlHighlighter htmlHighlighter = new HtmlHighlighter();
     StringBuilder number = new StringBuilder(""); 
+    public static String STP = "";
 %}
 
  LineTerminator = \r|\n|\r\n
@@ -51,15 +51,21 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
 
     <YYINITIAL> {
         {ReservedWord} {
-            htmlHighlighter.reservedKeyWords(yytext());
+            String str = yytext();
+            htmlHighlighter.reservedKeyWords(str);
+            return str;
         }
 
         {Operators} {
+            String str = yytext();
             htmlHighlighter.operatorsAndPunctuations(yytext());
+            return str;
         }
 
         {Identifier} {
-            htmlHighlighter.Identifiers(yytext());
+            STP = yytext();
+            htmlHighlighter.Identifiers(STP);
+            return "id";
         }
 
         {Comment} {
@@ -92,11 +98,13 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
 
     <STRING> {
         {StringPattern} {
-            htmlHighlighter.stringsAndCharacters(yytext());
+            STP = yytext();
+            htmlHighlighter.stringsAndCharacters(STP);
         }
         "\"" {
             htmlHighlighter.operatorsAndPunctuations("\"");
             yybegin(YYINITIAL);
+            return "string";
         }
     }
 
@@ -106,7 +114,9 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
             yybegin(INTEGER);
         }
         x|X {
-            htmlHighlighter.specialCharacters(yytext());
+            String str = yytext();
+            htmlHighlighter.specialCharacters(str);
+            number.append(str);
             yybegin(HEX);
         }
         "." {
@@ -118,9 +128,11 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
     <INTEGER> {
         [0-9]* {
             number.append(yytext());
-            htmlHighlighter.integerNumbers(number.toString());
+            STP = number.toString();
+            htmlHighlighter.integerNumbers(STP);
             number.setLength(0);
             yybegin(YYINITIAL);
+            return "decNum";
         }
         [0-9]*[.] {
             number.append(yytext());
@@ -132,24 +144,30 @@ import phase1.HtmlHighlighter.HtmlHighlighter;
 
         [0-9]*E[\-|+]?[(0-9)]+ {
             number.append(yytext());
-            htmlHighlighter.realNumbers(number.toString());
+            STP = number.toString();
+            htmlHighlighter.realNumbers(STP);
             number.setLength(0);
             yybegin(YYINITIAL);
+            return "sciNum";
         }
         [0-9]* {
             number.append(yytext());
-            htmlHighlighter.realNumbers(number.toString());
+            STP = number.toString();
+            htmlHighlighter.realNumbers(STP);
             number.setLength(0);
             yybegin(YYINITIAL);
+            return "realNum";
         }
     }
 
     <HEX> {
         [0-9a-fA-F]+ {
             number.append(yytext());
-            htmlHighlighter.integerNumbers(number.toString());
+            STP = number.toString();
+            htmlHighlighter.integerNumbers(STP);
             number.setLength(0);
             yybegin(YYINITIAL);
+            return "hexNum";
         }
     }
 

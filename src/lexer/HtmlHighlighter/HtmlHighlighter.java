@@ -1,4 +1,4 @@
-package phase1.HtmlHighlighter;
+package lexer.HtmlHighlighter;
 
 import java.io.FileWriter;
 import java.io.IOException;
