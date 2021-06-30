@@ -5,8 +5,10 @@ import java.util.Map;
 
 public class SymbolTable extends Data {
     public Map<String, Data> symbolTable = new HashMap<>();
+    public SymbolTable previousScopeTable;
 
-    public SymbolTable(String type) {
+    public SymbolTable(String type, SymbolTable previousScopeTable) {
         super(type);
+        this.previousScopeTable = previousScopeTable;
     }
 }

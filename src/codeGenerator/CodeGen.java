@@ -15,7 +15,7 @@ public class CodeGen implements CodeGenerator {
                          ,"out_string", "new", "break", "continue", "loop", "pool", "in_int", "out_int"
                          , "then", "len"};
 
-    private Data topMostTable = new SymbolTable("top_most");
+    private Data topMostTable = new SymbolTable("top_most", null);
     private Data currentScopeTable = topMostTable;
 
 
@@ -30,4 +30,5 @@ public class CodeGen implements CodeGenerator {
     public void doSemantic(String sem) {
 
     }
+
 }
