@@ -971,7 +971,7 @@ public class Lexer implements Lexical {
       if(token.equals(","))
         return "comma";
 
-      
+
       return token;
     } catch (IOException e) {
       e.printStackTrace();
