@@ -1,10 +1,10 @@
 package codeGenerator.data;
 
 public class VarType extends Data {
-    public String address;
+    boolean isInput;
 
-    public VarType(String type, String address) {
-        super(type);
-        this.address = address;
+    public VarType(String name, String type, String address, boolean isInput) {
+        super(name, type, address);
+        this.isInput = isInput;
     }
 }

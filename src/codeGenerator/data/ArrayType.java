@@ -1,14 +1,11 @@
 package codeGenerator.data;
 
 public class ArrayType extends Data {
-    public String address;
-    public int lowerBound;
-    public int upperBound;
+    public int size = 0;
+    boolean isInput;
 
-    public ArrayType(String type, String address, int lowerBound, int upperBound) {
-        super(type);
-        this.address = address;
-        this.lowerBound = lowerBound;
-        this.upperBound = upperBound;
+    public ArrayType(String name, String type, String address, boolean isInput) {
+        super(name, type, address);
+        this.isInput = isInput;
     }
 }
