@@ -362,7 +362,7 @@
         "start": 17,
         "end": 18,
         "token": "}",
-        "func": "",
+        "func": "backScope",
         "anchorX": 815.5,
         "anchorY": 308.0,
         "isGraph": false,

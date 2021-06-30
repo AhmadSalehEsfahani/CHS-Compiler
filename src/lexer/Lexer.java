@@ -964,7 +964,15 @@ public class Lexer implements Lexical {
   @Override
   public String nextToken() {
     try {
-      return next_token();
+      String token = next_token();
+      if (token == null){
+        return "$";
+      }
+      if(token.equals(","))
+        return "comma";
+
+      
+      return token;
     } catch (IOException e) {
       e.printStackTrace();
     }
