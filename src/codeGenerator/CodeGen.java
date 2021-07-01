@@ -22,6 +22,7 @@ public class CodeGen implements CodeGenerator {
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
+    private int scopeDepthVarLoc = 2; //1 in class and 2 in method
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -150,6 +151,21 @@ public class CodeGen implements CodeGenerator {
                 case "pushSciNum":
                     createImmAssign("sci");
                     break;
+
+                case "check&pushUsedID":
+                    String id = Lexer.STP;
+                    if(currentScope.symbolTable.containsKey(id)){
+                        scopeDepthVarLoc = 2;
+                    }
+                    else if (currentScope.previousScope.symbolTable.containsKey(id)){
+                        scopeDepthVarLoc = 1;
+                    }
+                    else {
+                        throw new CoolCompileError("id not defined");
+                    }
+                    semanticStack.push(id);
+
+
             }
 
         }catch (Exception e){
@@ -158,7 +174,7 @@ public class CodeGen implements CodeGenerator {
     }
 
 
-    public void createImmAssign(String numType){
+    private void createImmAssign(String numType){
         String number = Lexer.STP;
         String reg = "";
 
@@ -182,5 +198,17 @@ public class CodeGen implements CodeGenerator {
         }
 
         semanticStack.push(reg);
+    }
+
+    private String getAddrById(String id) throws CoolCompileError {
+        if(scopeDepthVarLoc == 2){
+            return currentScope.symbolTable.get(id).address;
+        }
+        if(scopeDepthVarLoc == 1){
+            return currentScope.previousScope.symbolTable.get(id).address;
+        }
+        else {
+            throw new CoolCompileError("can not find id");
+        }
     }
 }
