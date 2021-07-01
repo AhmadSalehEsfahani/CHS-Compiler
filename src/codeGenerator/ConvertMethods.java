@@ -11,23 +11,21 @@ public class ConvertMethods {
      */
 
 
-    //input string example :  1234
-    public static int decStringToInt(String numberStr){
+
+    //input string example : .123  or  12.345  ---> just put zero before this .12
+    public static String realStringCorrection(String numberStr){
         //TODO
     }
 
-    //input string example : .123  or  12.345
-    public static float realStringToFloat(String numberStr){
+    //input string example : 12.2E+2 or 12.E2 or 1.2E-1 or .12E3 ---> just put zero before this .12
+    //and change E to lower case
+    public static String sciStringCorrection(String numberStr){
         //TODO
     }
 
-    //input string example : 12.2E+2 or 12.E2 or 1.2E-1 or .12E3
-    public static float sciStringToFloat(String numberStr){
-        //TODO
-    }
-
-    //input string example : x12Af4  or  X43  or  xa22b
-    public static int hexStringToInt(String numberStr){
+    //input string example : x12Af4  or  X43  or  xa22b --->
+    //just put zero before x and change x to lower case
+    public static String hexStringCorrection(String numberStr){
         //TODO
     }
 }

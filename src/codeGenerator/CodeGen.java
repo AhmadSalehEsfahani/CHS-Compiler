@@ -4,6 +4,7 @@ import codeGenerator.data.*;
 import lexer.Lexer;
 import parser.CodeGenerator;
 
+import java.util.Arrays;
 import java.util.Stack;
 
 public class CodeGen implements CodeGenerator {
@@ -22,7 +23,7 @@ public class CodeGen implements CodeGenerator {
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
 
-    Stack<Object> semanticStack = new Stack<>();
+    private Stack<String> semanticStack = new Stack<>();
 
 
     public CodeGen(Lexer lexer) {
@@ -45,6 +46,9 @@ public class CodeGen implements CodeGenerator {
             switch (sem) {
                 case "classDCL":
                     className = Lexer.STP;
+                    if(Arrays.asList(reservedKeyWords).contains(className)){
+                        throw new CoolCompileError("reserved keywords must not be used");
+                    }
                     if (currentScope.symbolTable.containsKey(className)) {
                         throw new CoolCompileError("repetitive class name");
                     }
@@ -61,6 +65,9 @@ public class CodeGen implements CodeGenerator {
 
                 case "checkAndPushVarId":
                     varID = Lexer.STP;
+                    if(Arrays.asList(reservedKeyWords).contains(varID)){
+                        throw new CoolCompileError("reserved keywords must not be used");
+                    }
                     if(currentScope.symbolTable.containsKey(varID)){
                         throw new CoolCompileError("ID has used");
                     }
@@ -71,7 +78,7 @@ public class CodeGen implements CodeGenerator {
 
                 case "varDCL":
                     varType = Lexer.STP;
-                    varID = (String) semanticStack.pop();
+                    varID = semanticStack.pop();
                     if(inArrayDCL){
                         variable = new ArrayType(varID, varType, currentScope.address+"&"+varID, inMethodInputDCL);
                         //TODO code generate for .data
@@ -107,7 +114,7 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "methodDCL":
-                    varID = (String) semanticStack.pop();
+                    varID = semanticStack.pop();
 
                     Scope newMethod = new Method(varID, "method", currentScope.address + "&" + varID, currentScope);
                     currentScope.symbolTable.put(varID, newMethod);
@@ -119,7 +126,7 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "setMethodReturn":
-                    String returnType = (String) semanticStack.pop();
+                    String returnType = semanticStack.pop();
                     if(inArrayDCL) {
                         returnType = returnType + "[]";
                         inArrayDCL = false;
@@ -127,18 +134,53 @@ public class CodeGen implements CodeGenerator {
                     Method method = (Method)currentScope;
                     method.returnType = returnType;
                     break;
+
+                case "pushDecNum" :
+                    createImmAssign("dec");
+                    break;
+
+                case "pushRealNum":
+                    createImmAssign("real");
+                    break;
+
+                case "pushHexNum":
+                    createImmAssign("hex");
+                    break;
+
+                case "pushSciNum":
+                    createImmAssign("sci");
+                    break;
             }
-
-
-
-
-
-
-
 
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
+
+    public void createImmAssign(String numType){
+        String number = Lexer.STP;
+        String reg = "";
+
+        switch (numType) {
+            case "dec":
+                reg = RegisterPool.getTemp();
+                code.append("li ").append(reg).append(" ,").append(number);
+                break;
+            case "real":
+                reg = RegisterPool.getFloat();
+                code.append("li.s ").append(reg).append(" ,").append(ConvertMethods.realStringCorrection(number));
+                break;
+            case "hex":
+                reg = RegisterPool.getTemp();
+                code.append("li ").append(reg).append(" ,").append(ConvertMethods.hexStringCorrection(number));
+                break;
+            case "sci":
+                reg = RegisterPool.getFloat();
+                code.append("li.s ").append(reg).append(" ,").append(ConvertMethods.sciStringCorrection(number));
+                break;
+        }
+
+        semanticStack.push(reg);
+    }
 }
