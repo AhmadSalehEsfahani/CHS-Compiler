@@ -15,9 +15,9 @@ public class CodeGen implements CodeGenerator {
     private String[] reservedKeyWords = new String[]{"void", "int", "real", "bool", "string", "class", "for", "while", "if"
                          ,"else", "return", "break", "rof", "let", "fi", "Array", "void", "in_string"
                          ,"out_string", "new", "break", "continue", "loop", "pool", "in_int", "out_int"
-                         , "then", "len"};
+                         , "then", "len", "true", "false"};
 
-    private Scope topMostScope = new Scope("Main","class", null, null);
+    private Scope topMostScope = new Scope("Main","class", "Main", null);
     private Scope currentScope = topMostScope;
 
     private boolean inMethodInputDCL = false;
@@ -70,8 +70,13 @@ public class CodeGen implements CodeGenerator {
                         //TODO code generate for .data
                     }
                     else {
-                        variable = new VarType(varID, varType, currentScope.address + "&" + varID, inMethodInputDCL);
-                        //TODO code generate for .data
+                        if(varType.equals("string")){
+                            variable = new StringCool(varID, varType, currentScope.address + "&" + varID, inMethodInputDCL, "\"\"");
+                        }
+                        else {
+                            variable = new VarType(varID, varType, currentScope.address + "&" + varID, inMethodInputDCL);
+                        }
+                        addVarToData((VarType) variable);
                     }
                     currentScope.symbolTable.put(varID, variable);
                     inArrayDCL = false;
@@ -87,18 +92,18 @@ public class CodeGen implements CodeGenerator {
 
 
                 case "switchInputDCL":
-                    inMethodInputDCL = !inMethodInputDCL;
+                    inMethodInputDCL = false;
                     break;
 
                 case "methodDCL":
                     varID = semanticStack.pop();
 
-                    Scope newMethod = new Method(varID, "method", varID, currentScope);
+                    Scope newMethod = new Method(varID, "method", currentScope.address+"&"+varID, currentScope);
                     currentScope.symbolTable.put(varID, newMethod);
                     currentScope = newMethod;
-                    inMethodInputDCL = !inMethodInputDCL;
+                    inMethodInputDCL = true;
 
-                    //TODO add assembly code for method label
+                    code.append(newMethod.address).append(":").append("\n");
 
                     break;
 
@@ -171,6 +176,24 @@ public class CodeGen implements CodeGenerator {
         }
 
         semanticStack.push(reg);
+    }
+
+    private void addVarToData(VarType variable){
+        switch (variable.type) {
+            case "int":
+            case "bool":
+            case "void":
+                data.append(variable.address).append(": ").append(".word ").append("0");
+                break;
+            case "real":
+                data.append(variable.address).append(": ").append(".float ").append("0");
+                break;
+
+            case "string":
+                StringCool var = (StringCool)variable;
+                data.append(variable.address).append(": ").append(".ascii ").append(var.value);
+                break;
+        }
     }
 
 }
