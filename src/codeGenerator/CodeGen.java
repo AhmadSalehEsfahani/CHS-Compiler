@@ -17,12 +17,11 @@ public class CodeGen implements CodeGenerator {
                          ,"out_string", "new", "break", "continue", "loop", "pool", "in_int", "out_int"
                          , "then", "len"};
 
-    private Scope topMostScope = new Scope("program","scope", null, null);
+    private Scope topMostScope = new Scope("Main","class", null, null);
     private Scope currentScope = topMostScope;
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
-    private int scopeDepthVarLoc = 2; //1 in class and 2 in method
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -45,20 +44,6 @@ public class CodeGen implements CodeGenerator {
         try {
 
             switch (sem) {
-                case "classDCL":
-                    className = Lexer.STP;
-                    if(Arrays.asList(reservedKeyWords).contains(className)){
-                        throw new CoolCompileError("reserved keywords must not be used");
-                    }
-                    if (currentScope.symbolTable.containsKey(className)) {
-                        throw new CoolCompileError("repetitive class name");
-                    }
-                    else {
-                        newScope = new Scope(className, "class", className, currentScope);
-                        currentScope.symbolTable.put(className, newScope);
-                        currentScope = newScope;
-                    }
-                    break;
 
                 case "backScope":
                     currentScope = currentScope.previousScope;
@@ -100,15 +85,6 @@ public class CodeGen implements CodeGenerator {
                     semanticStack.push(Lexer.STP);
                     break;
 
-                case "checkTypeIdAndPush":
-                    varID = Lexer.STP;
-                    if(!topMostScope.symbolTable.containsKey(varID)){
-                        throw new CoolCompileError("Undefined Type");
-                    }
-                    else {
-                        semanticStack.push(varID);
-                    }
-                    break;
 
                 case "switchInputDCL":
                     inMethodInputDCL = !inMethodInputDCL;
@@ -117,7 +93,7 @@ public class CodeGen implements CodeGenerator {
                 case "methodDCL":
                     varID = semanticStack.pop();
 
-                    Scope newMethod = new Method(varID, "method", currentScope.address + "&" + varID, currentScope);
+                    Scope newMethod = new Method(varID, "method", varID, currentScope);
                     currentScope.symbolTable.put(varID, newMethod);
                     currentScope = newMethod;
                     inMethodInputDCL = !inMethodInputDCL;
@@ -155,17 +131,14 @@ public class CodeGen implements CodeGenerator {
                 case "check&pushUsedID":
                     String id = Lexer.STP;
                     if(currentScope.symbolTable.containsKey(id)){
-                        scopeDepthVarLoc = 2;
+                        semanticStack.push(currentScope.symbolTable.get(id).address);
                     }
                     else if (currentScope.previousScope.symbolTable.containsKey(id)){
-                        scopeDepthVarLoc = 1;
+                        semanticStack.push(currentScope.previousScope.symbolTable.get(id).address);
                     }
                     else {
                         throw new CoolCompileError("id not defined");
                     }
-                    semanticStack.push(id);
-
-
             }
 
         }catch (Exception e){
@@ -200,15 +173,4 @@ public class CodeGen implements CodeGenerator {
         semanticStack.push(reg);
     }
 
-    private String getAddrById(String id) throws CoolCompileError {
-        if(scopeDepthVarLoc == 2){
-            return currentScope.symbolTable.get(id).address;
-        }
-        if(scopeDepthVarLoc == 1){
-            return currentScope.previousScope.symbolTable.get(id).address;
-        }
-        else {
-            throw new CoolCompileError("can not find id");
-        }
-    }
 }
