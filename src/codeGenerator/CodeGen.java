@@ -190,7 +190,7 @@ public class CodeGen implements CodeGenerator {
 
                 case "arrayNew":
                     varType = semanticStack.pop();
-                    if (array == null){
+                    if (array == null) {
                         throw new CoolCompileError("problem in create array");
                     }
                     if (inArrayDCL) {
@@ -235,6 +235,93 @@ public class CodeGen implements CodeGenerator {
                 case "loadFalse":
                     loadFalse();
                     break;
+
+
+                case "logicalORR":
+                    expressionFunctions("or", null);
+                    break;
+
+                case "logicalAND":
+                    expressionFunctions("and", null);
+                    break;
+
+                case "bitwiseOR":
+                    expressionFunctions("or", null);
+                    break;
+
+                case "bitwiseXOR":
+                    expressionFunctions("xor", null);
+                    break;
+
+                case "bitwiseAND":
+                    expressionFunctions("and", null);
+                    break;
+
+                case "equality":
+                    compressionFunction("seq", "");
+                    break;
+
+                case "notEquality":
+                    compressionFunction("sne", "");
+                    break;
+
+                case "greaterThan":
+                    compressionFunction("sgt", "");
+                    break;
+
+                case "greaterThanEqual":
+                    compressionFunction("sge", "");
+                    break;
+
+                case "lessThan":
+                    compressionFunction("slt", "");
+                    break;
+
+                case "lessThanEqual":
+                    compressionFunction("sle", "");
+                    break;
+
+                case "addExpr":
+                    expressionFunctions("add", "add.s");
+                    break;
+
+                case "subExpr":
+                    expressionFunctions("sub", "sub.s");
+                    break;
+
+                case "mulExpr":
+                    expressionFunctions("mulo", "mul.s");
+                    break;
+
+                case "divExpr":
+                    expressionFunctions("div", "div.s");
+                    break;
+
+                case "remExpr":
+                    expressionFunctions("rem", null);
+                    break;
+
+                case "notNum":
+                    notFunction();
+                    break;
+
+                case "add1Before":
+                    unaryValueBefore(1);
+                    break;
+
+                case "sub1Before":
+                    unaryValueBefore(-1);
+                    break;
+
+                case "add1After":
+                    //TODO handle this in graph
+                    add1After();
+                    break;
+
+                case "sub1After":
+                    //TODO handle this in graph
+                    sub1After();
+                    break;
             }
 
         } catch (Exception e) {
@@ -242,6 +329,126 @@ public class CodeGen implements CodeGenerator {
         }
     }
 
+
+    private void unaryValueBefore(int value) throws CoolCompileError {
+        String id = Lexer.STP;
+        Data registerAddress;
+        if (currentScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.symbolTable.get(id);
+        } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.previousScope.symbolTable.get(id);
+        } else {
+            throw new CoolCompileError("id not defined");
+        }
+        String newRegisterValue = RegisterPool.getTemp();
+        code.append("lw ").append(newRegisterValue).append(" , ").append(registerAddress.address).append("\n");
+
+        code.append("addi ").append(newRegisterValue).append(" , ").append(newRegisterValue).append(" , ").append(value).append("\n");
+
+        code.append("sw ").append(newRegisterValue).append(" , ").append(registerAddress.address).append("\n");
+        semanticStack.push(newRegisterValue);
+    }
+
+    private void add1After() throws CoolCompileError {
+        String id = Lexer.STP;
+        Data registerAddress;
+        if (currentScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.symbolTable.get(id);
+        } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.previousScope.symbolTable.get(id);
+        } else {
+            throw new CoolCompileError("id not defined");
+        }
+        String newRegisterValue = RegisterPool.getTemp();
+        code.append("lw ").append(newRegisterValue).append(" , ").append(registerAddress.address).append("\n");
+
+        semanticStack.push(newRegisterValue);
+
+        code.append("addi ").append(newRegisterValue).append(" , ").append(newRegisterValue).append(" , ").append("1").append("\n");
+
+        code.append("sw ").append(newRegisterValue).append(" , ").append(registerAddress.address).append("\n");
+    }
+
+    private void sub1After() throws CoolCompileError {
+        String id = Lexer.STP;
+        Data registerAddress;
+        if (currentScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.symbolTable.get(id);
+        } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.previousScope.symbolTable.get(id);
+        } else {
+            throw new CoolCompileError("id not defined");
+        }
+        String newRegisterValue = RegisterPool.getTemp();
+        code.append("lw ").append(newRegisterValue).append(" , ").append(registerAddress.address).append("\n");
+
+        semanticStack.push(newRegisterValue);
+
+        code.append("addi ").append(newRegisterValue).append(" , ").append(newRegisterValue).append(" , ").append("-1").append("\n");
+
+        code.append("sw ").append(newRegisterValue).append(" , ").append(registerAddress.address).append("\n");
+    }
+
+    private void compressionFunction(String integerOperator, String floatOperator) throws CoolCompileError {
+        if (semanticStack.peek().charAt(1) == 't') {
+            expressionFunctions(integerOperator, null);
+        } else {
+            String topRegister1 = semanticStack.pop();
+            String topRegister2 = semanticStack.pop();
+
+            if (topRegister1.charAt(1) != topRegister2.charAt(1)) {
+                throw new CoolCompileError("type of two operand is different");
+            }
+            if (topRegister1.charAt(1) == 'f') {
+                //TODO add branch compare for flout numbers
+                code.append(floatOperator).append(" ").append(topRegister1).append(" , ")
+                        .append(topRegister1).append(" , ").append(topRegister2).append("\n");
+
+
+            } else {
+                throw new CoolCompileError("otherwise f type are illegal");
+            }
+
+        }
+    }
+
+    private void notFunction() throws CoolCompileError {
+        String topRegister = semanticStack.pop();
+        if (topRegister.charAt(1) == 't') {
+            code.append("neg").append(topRegister).append(" , ").append(topRegister);
+        } else if (topRegister.charAt(1) == 'f') {
+            code.append("neg.s").append(topRegister).append(" , ").append(topRegister);
+        } else {
+            throw new CoolCompileError("not operand reject for string numbers");
+        }
+
+        semanticStack.push(topRegister);
+    }
+
+    private void expressionFunctions(String integerOperator, String floatOperator) throws CoolCompileError {
+        //if in boolean operands send numbers bigger than 1 its do ISMP behavior
+        String topRegister1 = semanticStack.pop();
+        String topRegister2 = semanticStack.pop();
+
+        if (topRegister1.charAt(1) != topRegister2.charAt(1)) {
+            throw new CoolCompileError("type of two operand is different");
+        }
+
+        if (floatOperator != null && topRegister1.charAt(1) == 'f') {
+            code.append(floatOperator).append(" ").append(topRegister1).append(" , ")
+                    .append(topRegister1).append(" , ").append(topRegister2).append("\n");
+
+        } else {
+            if (topRegister1.charAt(1) == 't') {
+                code.append(integerOperator).append(" ").append(topRegister1).append(" , ")
+                        .append(topRegister1).append(" , ").append(topRegister2).append("\n");
+            } else {
+                throw new CoolCompileError("otherwise f,t type are illegal");
+            }
+        }
+        RegisterPool.backTemp(topRegister2);
+        semanticStack.push(topRegister1);
+    }
 
     private void createImmAssign(String numType) {
         String number = Lexer.STP;
