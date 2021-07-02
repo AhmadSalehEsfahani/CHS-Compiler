@@ -190,6 +190,9 @@ public class CodeGen implements CodeGenerator {
 
                 case "arrayNew":
                     varType = semanticStack.pop();
+                    if (array == null){
+                        throw new CoolCompileError("problem in create array");
+                    }
                     if (inArrayDCL) {
                         throw new CoolCompileError("array type can not be array");
                     }
@@ -208,6 +211,7 @@ public class CodeGen implements CodeGenerator {
                     data.replace(begin, end + 1, array.address + "&size: .word " + arraySize);
 
                     inArrayDCL = false;
+                    array = null;
                     break;
 
                 case "setLiteralInData":
