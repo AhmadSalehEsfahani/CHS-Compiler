@@ -104,7 +104,7 @@ import lexer.HtmlHighlighter.HtmlHighlighter;
         "\"" {
             htmlHighlighter.operatorsAndPunctuations("\"");
             yybegin(YYINITIAL);
-            return "string";
+            return "str_constant";
         }
     }
 

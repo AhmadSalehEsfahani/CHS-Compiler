@@ -19,9 +19,11 @@ public class CodeGen implements CodeGenerator {
 
     private Scope topMostScope = new Scope("Main","class", "Main", null);
     private Scope currentScope = topMostScope;
+    private final static String exceptionRoutineAddr = "exception";
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
+    private ArrayType array;
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -40,6 +42,10 @@ public class CodeGen implements CodeGenerator {
         String varID;
         String varType;
         Data variable;
+        String indexReg;
+        String arrayAddrReg;
+        String id;
+        String register;
 
         try {
 
@@ -67,7 +73,6 @@ public class CodeGen implements CodeGenerator {
                     varID = semanticStack.pop();
                     if(inArrayDCL){
                         variable = new ArrayType(varID, varType, currentScope.address+"&"+varID, inMethodInputDCL);
-                        //TODO code generate for .data
                     }
                     else {
                         if(varType.equals("string")){
@@ -134,16 +139,63 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "check&pushUsedID":
-                    String id = Lexer.STP;
+                    id = Lexer.STP;
                     if(currentScope.symbolTable.containsKey(id)){
-                        semanticStack.push(currentScope.symbolTable.get(id).address);
+                        assignVarToReg(currentScope.symbolTable.get(id));
                     }
                     else if (currentScope.previousScope.symbolTable.containsKey(id)){
-                        semanticStack.push(currentScope.previousScope.symbolTable.get(id).address);
+                        assignVarToReg(currentScope.previousScope.symbolTable.get(id));
                     }
                     else {
                         throw new CoolCompileError("id not defined");
                     }
+                    break;
+
+                case "check&pushAddr":
+                    id = Lexer.STP;
+                    if(currentScope.symbolTable.containsKey(id)){
+                        variable = currentScope.symbolTable.get(id);
+                    }
+                    else if (currentScope.previousScope.symbolTable.containsKey(id)){
+                        variable = currentScope.previousScope.symbolTable.get(id);
+                    }
+                    else {
+                        throw new CoolCompileError("id not defined");
+                    }
+                    if(variable.type.equals("array"))
+                        array = (ArrayType) variable;
+
+                    register = RegisterPool.getSavedTemp();
+                    code.append("la ").append(register).append(", ").append(variable.address);
+                    semanticStack.push(register);
+                    break;
+
+                case "arrayInLeftAssign":
+                    indexReg = semanticStack.pop();
+                    arrayAddrReg = semanticStack.pop();
+
+                    codeForArrayCheckBound(indexReg);
+
+                    code.append("add ").append(arrayAddrReg).append(", ").append(arrayAddrReg).append(indexReg);
+
+                    semanticStack.push(arrayAddrReg);
+                    RegisterPool.backTemp(indexReg);
+                    break;
+
+                case "fetchArrayValue":
+                    indexReg = semanticStack.pop();
+                    arrayAddrReg = semanticStack.pop();
+                    break;
+
+                case "arrayNew":
+                    varType = semanticStack.pop();
+                    if (inArrayDCL){
+                        varType = varType + "[]";
+                    }
+                    String arraySize = Lexer.STP;
+
+                    inArrayDCL = false;
+                    break;
             }
 
         }catch (Exception e){
@@ -186,7 +238,7 @@ public class CodeGen implements CodeGenerator {
                 data.append(variable.address).append(": ").append(".word ").append("0");
                 break;
             case "real":
-                data.append(variable.address).append(": ").append(".float ").append("0");
+                data.append(variable.address).append(": ").append(".float ").append("0.0");
                 break;
 
             case "string":
@@ -194,6 +246,45 @@ public class CodeGen implements CodeGenerator {
                 data.append(variable.address).append(": ").append(".ascii ").append(var.value);
                 break;
         }
+    }
+
+    private void assignVarToReg(Data variable) throws CoolCompileError {
+        String register;
+        switch (variable.type) {
+            case "int":
+                register = RegisterPool.getTemp();
+                code.append("lw ").append(register).append(" ,").append(variable.address).append("\n");
+                break;
+            case "float":
+                register = RegisterPool.getFloat();
+                code.append("l.s ").append(register).append(" ,").append(variable.address).append("\n");
+                break;
+
+            case "array":
+            case "method":
+            case "string":
+                register = RegisterPool.getSavedTemp();
+                code.append("la ").append(register).append(" ,").append(variable.address).append("\n");
+                break;
+
+            default:
+                throw new CoolCompileError("this variable in expresion is invalid");
+        }
+
+        semanticStack.push(register);
+    }
+
+    private void codeForArrayCheckBound(String indexReg){
+        String sizeAddrReg = RegisterPool.getTemp();
+        String compResReg = RegisterPool.getTemp();
+
+        code.append("lw ").append(sizeAddrReg).append(", ").append(array.address+"&"+"size");
+        code.append("sge ").append(compResReg).append(", ").append(indexReg).append(", ").append(sizeAddrReg);
+        code.append("slt ").append(compResReg).append(", ").append(indexReg).append(", ").append("0");
+        code.append("beq ").append(compResReg).append(", ").append(exceptionRoutineAddr);
+
+        RegisterPool.backTemp(sizeAddrReg);
+        RegisterPool.backTemp(compResReg);
     }
 
 }

@@ -735,8 +735,8 @@
         "isFinal": false
       },
       {
-        "x": 850.0,
-        "y": 244.0,
+        "x": 957.0,
+        "y": 250.0,
         "id": 49,
         "isFinal": true
       },
@@ -819,14 +819,14 @@
         "isFinal": false
       },
       {
-        "x": 665.0,
-        "y": 501.0,
+        "x": 749.0,
+        "y": 500.0,
         "id": 63,
         "isFinal": false
       },
       {
-        "x": 765.0,
-        "y": 503.0,
+        "x": 869.0,
+        "y": 502.0,
         "id": 64,
         "isFinal": true
       },
@@ -1058,7 +1058,7 @@
         "start": 48,
         "end": 49,
         "token": "]",
-        "func": "",
+        "func": "fetchArrayValue",
         "anchorX": 781.5,
         "anchorY": 237.0,
         "isGraph": false,
@@ -1207,11 +1207,11 @@
       {
         "start": 62,
         "end": 63,
-        "token": "Expr",
-        "func": "",
+        "token": "decNum",
+        "func": "arrayNew",
         "anchorX": 601.5,
         "anchorY": 506.0,
-        "isGraph": true,
+        "isGraph": false,
         "isGlobal": false
       },
       {
@@ -1219,8 +1219,8 @@
         "end": 64,
         "token": ")",
         "func": "",
-        "anchorX": 715.0,
-        "anchorY": 502.0,
+        "anchorX": 799.0,
+        "anchorY": 504.0,
         "isGraph": false,
         "isGlobal": false
       }
@@ -1297,26 +1297,26 @@
         "isFinal": false
       },
       {
-        "x": 355.0,
-        "y": 264.0,
+        "x": 439.0,
+        "y": 261.0,
         "id": 70,
         "isFinal": true
       },
       {
-        "x": 514.0,
-        "y": 184.0,
+        "x": 610.0,
+        "y": 136.0,
         "id": 71,
         "isFinal": false
       },
       {
-        "x": 517.0,
-        "y": 340.0,
+        "x": 541.0,
+        "y": 398.0,
         "id": 72,
         "isFinal": false
       },
       {
-        "x": 680.0,
-        "y": 348.0,
+        "x": 730.0,
+        "y": 388.0,
         "id": 73,
         "isFinal": false
       },
@@ -1332,7 +1332,7 @@
         "start": 69,
         "end": 70,
         "token": "id",
-        "func": "",
+        "func": "check\u0026pushAddr",
         "anchorX": 268.5,
         "anchorY": 266.0,
         "isGraph": false,
@@ -1343,8 +1343,8 @@
         "end": 72,
         "token": "[",
         "func": "",
-        "anchorX": 436.0,
-        "anchorY": 302.0,
+        "anchorX": 483.0,
+        "anchorY": 330.0,
         "isGraph": false,
         "isGlobal": false
       },
@@ -1353,8 +1353,8 @@
         "end": 71,
         "token": ".",
         "func": "",
-        "anchorX": 434.5,
-        "anchorY": 224.0,
+        "anchorX": 513.5,
+        "anchorY": 182.0,
         "isGraph": false,
         "isGlobal": false
       },
@@ -1363,8 +1363,8 @@
         "end": 74,
         "token": "id",
         "func": "",
-        "anchorX": 652.0,
-        "anchorY": 213.0,
+        "anchorX": 719.0,
+        "anchorY": 180.0,
         "isGraph": false,
         "isGlobal": false
       },
@@ -1373,8 +1373,8 @@
         "end": 73,
         "token": "Expr",
         "func": "",
-        "anchorX": 598.5,
-        "anchorY": 344.0,
+        "anchorX": 629.5,
+        "anchorY": 396.0,
         "isGraph": true,
         "isGlobal": false
       },
@@ -1382,9 +1382,9 @@
         "start": 73,
         "end": 74,
         "token": "]",
-        "func": "",
-        "anchorX": 735.0,
-        "anchorY": 295.0,
+        "func": "arrayInLeftAssign",
+        "anchorX": 765.0,
+        "anchorY": 322.0,
         "isGraph": false,
         "isGlobal": false
       }
@@ -2117,7 +2117,7 @@
       {
         "start": 113,
         "end": 114,
-        "token": "Expr",
+        "token": "enhanced_id",
         "func": "",
         "anchorX": 351.0,
         "anchorY": 657.5,
