@@ -21,6 +21,7 @@ public class CodeGen implements CodeGenerator {
     private Scope currentScope = topMostScope;
     private final static String exceptionRoutineAddr = "exception";
 
+
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
     private ArrayType array;
@@ -196,6 +197,27 @@ public class CodeGen implements CodeGenerator {
 
                     inArrayDCL = false;
                     break;
+
+                case "setLiteralInData":
+                    String literal = Lexer.STP;
+                    data.append("literal&").append(literal).append(" : ").append(".ascii ")
+                            .append("\"").append(literal).append("\"").append("\n");
+                    register = RegisterPool.getSavedTemp();
+                    code.append("la ").append(register).append(", ")
+                            .append("literal&").append(literal).append("\n");
+                    semanticStack.push(register);
+                    break;
+
+                case "assign":
+                    assignment();
+                    break;
+
+                case "loadTrue":
+                    loadTrue();
+                    break;
+                case "loadFalse":
+                    loadFalse();
+                    break;
             }
 
         }catch (Exception e){
@@ -235,15 +257,11 @@ public class CodeGen implements CodeGenerator {
             case "int":
             case "bool":
             case "void":
+            case "string":
                 data.append(variable.address).append(": ").append(".word ").append("0");
                 break;
             case "real":
                 data.append(variable.address).append(": ").append(".float ").append("0.0");
-                break;
-
-            case "string":
-                StringCool var = (StringCool)variable;
-                data.append(variable.address).append(": ").append(".ascii ").append(var.value);
                 break;
         }
     }
@@ -287,4 +305,48 @@ public class CodeGen implements CodeGenerator {
         RegisterPool.backTemp(compResReg);
     }
 
+    private void assignment() throws CoolCompileError {
+        String rightReg = semanticStack.pop();
+        String leftReg = semanticStack.pop();
+
+        if(leftReg.contains("$t")){
+            if(!rightReg.contains("$t")){
+                throw new CoolCompileError("not compatible in assignment");
+            }
+            code.append("sw ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
+            RegisterPool.backTemp(rightReg);
+            RegisterPool.backTemp(leftReg);
+        }
+        else if(leftReg.contains("$f")){
+            if(!rightReg.contains("$f")){
+                throw new CoolCompileError("not compatible in assignment");
+            }
+            code.append("s.s ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
+            RegisterPool.backFloat(rightReg);
+            RegisterPool.backFloat(leftReg);
+        }
+        else if(leftReg.contains("$s")){
+            if(!rightReg.contains("$s")){
+                throw new CoolCompileError("not compatible in assignment");
+            }
+            code.append("sw ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
+            RegisterPool.backSavedTemp(rightReg);
+            RegisterPool.backSavedTemp(leftReg);
+        }
+        else {
+            throw new CoolCompileError("error in assignment");
+        }
+    }
+
+    private void loadTrue(){
+        String register = RegisterPool.getTemp();
+        code.append("li ").append(register).append(" ,").append("1").append("\n");
+        semanticStack.push(register);
+    }
+
+    private void loadFalse(){
+        String register = RegisterPool.getTemp();
+        code.append("li ").append(register).append(" ,").append("0").append("\n");
+        semanticStack.push(register);
+    }
 }
