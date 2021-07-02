@@ -1,4 +1,4 @@
-package phase1.HtmlHighlighter;
+package lexer.HtmlHighlighter;
 
 public class testClass {
     public static void main(String[] args) {
