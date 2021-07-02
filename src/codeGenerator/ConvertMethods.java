@@ -11,21 +11,28 @@ public class ConvertMethods {
      */
 
 
-
     //input string example : .123  or  12.345  ---> just put zero before this .12
-    public static String realStringCorrection(String numberStr){
-        //TODO
+    public static String realStringCorrection(String numberStr) {
+        String result = numberStr;
+        if (result.charAt(0) == '.') {
+            result = '0' + result;
+        }
+        return result;
     }
 
     //input string example : 12.2E+2 or 12.E2 or 1.2E-1 or .12E3 ---> just put zero before this .12
     //and change E to lower case
-    public static String sciStringCorrection(String numberStr){
-        //TODO
+    public static String sciStringCorrection(String numberStr) {
+        String result = numberStr;
+        if (result.charAt(0) == '.') {
+            result = '0' + result;
+        }
+        return result.replace('E', 'e');
     }
 
     //input string example : x12Af4  or  X43  or  xa22b --->
     //just put zero before x and change x to lower case
-    public static String hexStringCorrection(String numberStr){
-        //TODO
+    public static String hexStringCorrection(String numberStr) {
+        return "0x" + numberStr.substring(1);
     }
 }
