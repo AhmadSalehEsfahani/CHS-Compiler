@@ -175,7 +175,7 @@ public class CodeGen implements CodeGenerator {
                     indexReg = semanticStack.pop();
                     arrayAddrReg = semanticStack.pop();
 
-                    codeForArrayCheckBound(indexReg);
+                    codeForArrayCheckBound(indexReg, array.address);
 
                     code.append("add ").append(arrayAddrReg).append(", ").append(arrayAddrReg).append(indexReg);
 
@@ -184,8 +184,7 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "fetchArrayValue":
-                    indexReg = semanticStack.pop();
-                    arrayAddrReg = semanticStack.pop();
+                    fetchArrayValue();
                     break;
 
                 case "arrayNew":
@@ -301,6 +300,7 @@ public class CodeGen implements CodeGenerator {
                 break;
 
             case "array":
+                array = (ArrayType) variable;
             case "method":
             case "string":
                 register = RegisterPool.getSavedTemp();
@@ -314,11 +314,11 @@ public class CodeGen implements CodeGenerator {
         semanticStack.push(register);
     }
 
-    private void codeForArrayCheckBound(String indexReg) {
+    private void codeForArrayCheckBound(String indexReg, String arrayAddr) {
         String sizeAddrReg = RegisterPool.getTemp();
         String compResReg = RegisterPool.getTemp();
 
-        code.append("lw ").append(sizeAddrReg).append(", ").append(array.address + "&" + "size").append("\n");
+        code.append("lw ").append(sizeAddrReg).append(", ").append(arrayAddr + "&" + "size").append("\n");
         code.append("sge ").append(compResReg).append(", ").append(indexReg).append(", ").append(sizeAddrReg).append("\n");
         code.append("slt ").append(compResReg).append(", ").append(indexReg).append(", ").append("0").append("\n");
         code.append("beq ").append(compResReg).append(", ").append(exceptionRoutineAddr);
@@ -367,5 +367,32 @@ public class CodeGen implements CodeGenerator {
         String register = RegisterPool.getTemp();
         code.append("li ").append(register).append(" ,").append("0").append("\n");
         semanticStack.push(register);
+    }
+
+    private void fetchArrayValue() throws CoolCompileError {
+        if(array == null){
+            throw new CoolCompileError("problem in array fetch");
+        }
+        String indexReg = semanticStack.pop();
+        String arrayAddrReg = semanticStack.pop();
+
+        String finalValueReg;
+
+        codeForArrayCheckBound(indexReg, array.address);
+        code.append("add ").append(arrayAddrReg).append(" ,").append(arrayAddrReg).append(" ,").append(indexReg).append("\n");
+
+        if(array.type.equals("float")){
+            finalValueReg = RegisterPool.getFloat();
+            code.append("l.s ").append(finalValueReg).append(", ").append("(").append(arrayAddrReg).append(")").append("\n");
+        }
+        else {
+            finalValueReg = RegisterPool.getTemp();
+            code.append("lw ").append(finalValueReg).append(", ").append("(").append(arrayAddrReg).append(")").append("\n");
+        }
+
+        semanticStack.push(finalValueReg);
+        RegisterPool.backTemp(indexReg);
+        RegisterPool.backSavedTemp(arrayAddrReg);
+        array = null;
     }
 }
