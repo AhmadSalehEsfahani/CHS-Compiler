@@ -4,7 +4,10 @@ import codeGenerator.data.*;
 import lexer.Lexer;
 import parser.CodeGenerator;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.Arrays;
+import java.util.Formatter;
 import java.util.Stack;
 
 public class CodeGen implements CodeGenerator {
@@ -33,6 +36,7 @@ public class CodeGen implements CodeGenerator {
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
     private ArrayType array;
+    private Data globalData;
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -40,7 +44,7 @@ public class CodeGen implements CodeGenerator {
     public CodeGen(Lexer lexer) {
         this.scanner = lexer;
         code.append(".text\n");
-        code.append(".globl main\n");
+        code.append(".globl MainANDmain\n");
         data.append(".data\n");
     }
 
@@ -77,14 +81,14 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "varDCL":
-                    varType = Lexer.STP;
+                    varType = semanticStack.pop();
                     varID = semanticStack.pop();
                     if (inArrayDCL) {
-                        variable = new ArrayType(varID, "array", varType, currentScope.address + "&" + varID, inMethodInputDCL);
+                        variable = new ArrayType(varID, "array", varType, currentScope.address + "AND" + varID, inMethodInputDCL);
                     } else if (varType.equals("string")) {
-                        variable = new StringCool(varID, varType, currentScope.address + "&" + varID, inMethodInputDCL, "\"\"");
+                        variable = new StringCool(varID, varType, currentScope.address + "AND" + varID, inMethodInputDCL, "\"\"");
                     } else {
-                        variable = new VarType(varID, varType, currentScope.address + "&" + varID, inMethodInputDCL);
+                        variable = new VarType(varID, varType, currentScope.address + "AND" + varID, inMethodInputDCL);
                     }
 
                     addVarToData((VarType) variable);
@@ -108,7 +112,7 @@ public class CodeGen implements CodeGenerator {
                 case "methodDCL":
                     varID = semanticStack.pop();
 
-                    Scope newMethod = new Method(varID, "method", currentScope.address + "&" + varID, currentScope);
+                    Scope newMethod = new Method(varID, "method", currentScope.address + "AND" + varID, currentScope);
                     currentScope.symbolTable.put(varID, newMethod);
                     currentScope = newMethod;
                     inMethodInputDCL = true;
@@ -154,20 +158,20 @@ public class CodeGen implements CodeGenerator {
                     }
                     break;
 
-                case "check&pushAddr":
+                case "check&pushAddrForAssign":
                     id = Lexer.STP;
                     if (currentScope.symbolTable.containsKey(id)) {
-                        variable = currentScope.symbolTable.get(id);
+                        globalData = currentScope.symbolTable.get(id);
                     } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
-                        variable = currentScope.previousScope.symbolTable.get(id);
+                        globalData = currentScope.previousScope.symbolTable.get(id);
                     } else {
                         throw new CoolCompileError("id not defined");
                     }
-                    if (variable.type.equals("array"))
-                        array = (ArrayType) variable;
+                    if (globalData.type.equals("array"))
+                        array = (ArrayType) globalData;
 
-                    register = RegisterPool.getSavedTemp();
-                    code.append("la ").append(register).append(", ").append(variable.address);
+                    register = RegisterPool.getTemp();
+                    code.append("la ").append(register).append(", ").append(globalData.address).append("\n");
                     semanticStack.push(register);
                     break;
 
@@ -177,7 +181,7 @@ public class CodeGen implements CodeGenerator {
 
                     codeForArrayCheckBound(indexReg, array.address);
 
-                    code.append("add ").append(arrayAddrReg).append(", ").append(arrayAddrReg).append(indexReg);
+                    code.append("add ").append(arrayAddrReg).append(", ").append(arrayAddrReg).append(indexReg).append("\n");
 
                     semanticStack.push(arrayAddrReg);
                     RegisterPool.backTemp(indexReg);
@@ -205,9 +209,9 @@ public class CodeGen implements CodeGenerator {
                     int end = data.lastIndexOf(array.address + ": .space 0");
                     data.replace(begin, end + 1, array.address + ": .space " + arraySize);
 
-                    begin = data.indexOf(array.address + "&size: .word 0");
-                    end = data.lastIndexOf(array.address + "&size: .word 0");
-                    data.replace(begin, end + 1, array.address + "&size: .word " + arraySize);
+                    begin = data.indexOf(array.address + "ANDsize: .word 0");
+                    end = data.lastIndexOf(array.address + "ANDsize: .word 0");
+                    data.replace(begin, end + 1, array.address + "ANDsize: .word " + arraySize);
 
                     inArrayDCL = false;
                     array = null;
@@ -215,11 +219,11 @@ public class CodeGen implements CodeGenerator {
 
                 case "setLiteralInData":
                     String literal = Lexer.STP;
-                    data.append("literal&").append(literal).append(" : ").append(".ascii ")
+                    data.append("literalAND").append(literal).append(" : ").append(".ascii ")
                             .append("\"").append(literal).append("\"").append("\n");
                     register = RegisterPool.getSavedTemp();
                     code.append("la ").append(register).append(", ")
-                            .append("literal&").append(literal).append("\n");
+                            .append("literalAND").append(literal).append("\n");
                     semanticStack.push(register);
                     break;
 
@@ -234,7 +238,6 @@ public class CodeGen implements CodeGenerator {
                 case "loadFalse":
                     loadFalse();
                     break;
-
 
                 case "logicalORR":
                     expressionFunctions("or", null);
@@ -321,6 +324,9 @@ public class CodeGen implements CodeGenerator {
                     //TODO handle this in graph
                     sub1After();
                     break;
+
+                case "finalize":
+                    finalActions();
             }
 
         } catch (Exception e) {
@@ -414,9 +420,9 @@ public class CodeGen implements CodeGenerator {
     private void notFunction() throws CoolCompileError {
         String topRegister = semanticStack.pop();
         if (topRegister.charAt(1) == 't') {
-            code.append("neg").append(topRegister).append(" , ").append(topRegister);
+            code.append("neg").append(topRegister).append(" , ").append(topRegister).append("\n");
         } else if (topRegister.charAt(1) == 'f') {
-            code.append("neg.s").append(topRegister).append(" , ").append(topRegister);
+            code.append("neg.s").append(topRegister).append(" , ").append(topRegister).append("\n");
         } else {
             throw new CoolCompileError("not operand reject for string numbers");
         }
@@ -456,19 +462,19 @@ public class CodeGen implements CodeGenerator {
         switch (numType) {
             case "dec":
                 reg = RegisterPool.getTemp();
-                code.append("li ").append(reg).append(" ,").append(number);
+                code.append("li ").append(reg).append(" ,").append(number).append("\n");
                 break;
             case "real":
                 reg = RegisterPool.getFloat();
-                code.append("li.s ").append(reg).append(" ,").append(ConvertMethods.realStringCorrection(number));
+                code.append("li.s ").append(reg).append(" ,").append(ConvertMethods.realStringCorrection(number)).append("\n");
                 break;
             case "hex":
                 reg = RegisterPool.getTemp();
-                code.append("li ").append(reg).append(" ,").append(ConvertMethods.hexStringCorrection(number));
+                code.append("li ").append(reg).append(" ,").append(ConvertMethods.hexStringCorrection(number)).append("\n");
                 break;
             case "sci":
                 reg = RegisterPool.getFloat();
-                code.append("li.s ").append(reg).append(" ,").append(ConvertMethods.sciStringCorrection(number));
+                code.append("li.s ").append(reg).append(" ,").append(ConvertMethods.sciStringCorrection(number)).append("\n");
                 break;
         }
 
@@ -489,7 +495,7 @@ public class CodeGen implements CodeGenerator {
 
             case "array":
                 data.append(variable.address).append(": ").append(".space ").append("0").append("\n");
-                data.append(variable.address).append("&size ").append(": ").append(".word ").append("0").append("\n");
+                data.append(variable.address).append("ANDsize ").append(": ").append(".word ").append("0").append("\n");
                 break;
         }
     }
@@ -501,7 +507,7 @@ public class CodeGen implements CodeGenerator {
                 register = RegisterPool.getTemp();
                 code.append("lw ").append(register).append(" ,").append(variable.address).append("\n");
                 break;
-            case "float":
+            case "real":
                 register = RegisterPool.getFloat();
                 code.append("l.s ").append(register).append(" ,").append(variable.address).append("\n");
                 break;
@@ -525,7 +531,7 @@ public class CodeGen implements CodeGenerator {
         String sizeAddrReg = RegisterPool.getTemp();
         String compResReg = RegisterPool.getTemp();
 
-        code.append("lw ").append(sizeAddrReg).append(", ").append(arrayAddr + "&" + "size").append("\n");
+        code.append("lw ").append(sizeAddrReg).append(", ").append(arrayAddr + "AND" + "size").append("\n");
         code.append("sge ").append(compResReg).append(", ").append(indexReg).append(", ").append(sizeAddrReg).append("\n");
         code.append("slt ").append(compResReg).append(", ").append(indexReg).append(", ").append("0").append("\n");
         code.append("beq ").append(compResReg).append(", ").append(exceptionRoutineAddr);
@@ -538,29 +544,35 @@ public class CodeGen implements CodeGenerator {
         String rightReg = semanticStack.pop();
         String leftReg = semanticStack.pop();
 
-        if (leftReg.contains("$t")) {
-            if (!rightReg.contains("$t")) {
-                throw new CoolCompileError("not compatible in assignment");
-            }
-            code.append("sw ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
-            RegisterPool.backTemp(rightReg);
-            RegisterPool.backTemp(leftReg);
-        } else if (leftReg.contains("$f")) {
-            if (!rightReg.contains("$f")) {
-                throw new CoolCompileError("not compatible in assignment");
-            }
-            code.append("s.s ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
-            RegisterPool.backFloat(rightReg);
-            RegisterPool.backFloat(leftReg);
-        } else if (leftReg.contains("$s")) {
-            if (!rightReg.contains("$s")) {
-                throw new CoolCompileError("not compatible in assignment");
-            }
-            code.append("sw ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
-            RegisterPool.backSavedTemp(rightReg);
-            RegisterPool.backSavedTemp(leftReg);
-        } else {
-            throw new CoolCompileError("error in assignment");
+        switch (globalData.type) {
+            case "int":
+            case "bool":
+                if (!rightReg.contains("$t")) {
+                    throw new CoolCompileError("not compatible in assignment");
+                }
+                code.append("sw ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
+                RegisterPool.backTemp(rightReg);
+                RegisterPool.backTemp(leftReg);
+                break;
+            case "real":
+                if (!rightReg.contains("$f")) {
+                    throw new CoolCompileError("not compatible in assignment");
+                }
+                code.append("s.s ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
+                RegisterPool.backFloat(rightReg);
+                RegisterPool.backFloat(leftReg);
+                break;
+            case "string":
+            case "array":
+                if (!rightReg.contains("$s")) {
+                    throw new CoolCompileError("not compatible in assignment");
+                }
+                code.append("sw ").append(rightReg).append(", ").append("(").append(leftReg).append(")").append("\n");
+                RegisterPool.backSavedTemp(rightReg);
+                RegisterPool.backSavedTemp(leftReg);
+                break;
+            default:
+                throw new CoolCompileError("error in assignment");
         }
     }
 
@@ -577,7 +589,7 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void fetchArrayValue() throws CoolCompileError {
-        if(array == null){
+        if (array == null) {
             throw new CoolCompileError("problem in array fetch");
         }
         String indexReg = semanticStack.pop();
@@ -588,11 +600,10 @@ public class CodeGen implements CodeGenerator {
         codeForArrayCheckBound(indexReg, array.address);
         code.append("add ").append(arrayAddrReg).append(" ,").append(arrayAddrReg).append(" ,").append(indexReg).append("\n");
 
-        if(array.type.equals("float")){
+        if (array.type.equals("real")) {
             finalValueReg = RegisterPool.getFloat();
             code.append("l.s ").append(finalValueReg).append(", ").append("(").append(arrayAddrReg).append(")").append("\n");
-        }
-        else {
+        } else {
             finalValueReg = RegisterPool.getTemp();
             code.append("lw ").append(finalValueReg).append(", ").append("(").append(arrayAddrReg).append(")").append("\n");
         }
@@ -601,5 +612,60 @@ public class CodeGen implements CodeGenerator {
         RegisterPool.backTemp(indexReg);
         RegisterPool.backSavedTemp(arrayAddrReg);
         array = null;
+    }
+
+    private void codeForPrintString(){
+        code.append(printString).append(": ").append("\n");
+    }
+
+    private void codeForPrintInt(){
+        code.append(printInt).append(": ").append("\n");
+    }
+
+    private void codeForPrintFloat(){
+        code.append(printFloat).append(": ").append("\n");
+    }
+
+    private void codeForReadInt(){
+        code.append(readInt).append(": ").append("\n");
+    }
+
+    private void codeForReadString(){
+        code.append(readString).append(": ").append("\n");
+    }
+
+    private void codeForReadFloat(){
+        code.append(readFloat).append(": ").append("\n");
+    }
+
+    private void codeForExceptionHandling(){
+        code.append(exceptionRoutineAddr).append(": ").append("\n");
+    }
+
+    private void codeForTermination(){
+        code.append("termination: ").append("\n");
+        code.append("li $v0, 10").append("\n");
+        code.append("li $t0, 0").append("\n");
+        code.append("move $a0, $t0").append("\n");
+        code.append("syscall").append("\n");
+    }
+
+    private void finalActions() throws FileNotFoundException {
+        codeForPrintString();
+        codeForPrintInt();
+        codeForPrintFloat();
+        codeForReadInt();
+        codeForReadString();
+        codeForReadFloat();
+        codeForExceptionHandling();
+        codeForTermination();
+
+        Formatter formatter = new Formatter(new FileOutputStream("src/out.s"));
+        formatter.format(data.toString());
+        formatter.flush();
+        formatter.format("\n");
+        formatter.flush();
+        formatter.format(code.toString());
+        formatter.flush();
     }
 }

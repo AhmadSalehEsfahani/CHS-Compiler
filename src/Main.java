@@ -12,9 +12,9 @@ public class Main {
         String tableAddress = "src/parser/table.npt";
         Lexer scanner = new Lexer(new FileReader(inputAddress));
         CodeGen codeGenerator = new CodeGen(scanner);
-        Parser parser = new Parser(scanner, codeGenerator, tableAddress);
+        //Parser parser = new Parser(scanner, codeGenerator, tableAddress);
         // For debugging parser, use bellow
-        // Parser parser = new Parser(scanner, codeGenerator, tableAddress, true);
+         Parser parser = new Parser(scanner, codeGenerator, tableAddress, true);
         parser.parse();
     }
 }

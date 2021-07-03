@@ -1,0 +1,15 @@
+class Main {
+    let i : int;
+
+    main () : int {
+        let a : real;
+        let j : int;
+        let z : int;
+        let res : int;
+        a <- 0.2e-3;
+        i <- 3;
+        j <- 21;
+        z <- 22;
+        res <- i + j * z;
+    }
+}

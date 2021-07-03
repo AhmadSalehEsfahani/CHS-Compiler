@@ -29,7 +29,7 @@ import lexer.HtmlHighlighter.HtmlHighlighter;
  Comment = {TraditionalComment} | {EndOfLineComment}
 
 
- ReservedWord = "void"|"int"|"real"|"bool"|"string"|"for"|"while"|"if"|"else"|"return"|"break"|"rof"|"let"|"fi"|"array"|"in_string"|"out_string"|"new"|"continue"|"loop"|"pull"|"in_int"|"out_int"|"then"|"len"
+ ReservedWord = "class"|"void"|"int"|"real"|"bool"|"string"|"for"|"while"|"if"|"else"|"return"|"break"|"rof"|"let"|"fi"|"array"|"in_string"|"out_string"|"new"|"continue"|"loop"|"pull"|"in_int"|"out_int"|"then"|"len"
 
 
  Identifier = [a-zA-Z][a-zA-Z0-9_]{0,30}
@@ -38,7 +38,7 @@ import lexer.HtmlHighlighter.HtmlHighlighter;
 
 
 
- Operators = "+"|"*"|"-"|"/"|"+="|"-="|"*="|"/="|"++"|"--"|"<"|"<="|">"|">="|"=="|"!="|"<-"|"%"|"&&"|"||"|"&"|"|"|"^"|"!"|"."|","|";"|"["|"]"|"{"|"}"|"("|")"
+ Operators = "+"|"*"|"-"|"/"|"+="|"-="|"*="|"/="|"++"|"--"|"<"|"<="|">"|">="|"=="|"!="|"<-"|"%"|"&&"|"||"|"&"|"|"|"^"|"!"|"."|","|";"|"["|"]"|"{"|"}"|"("|")"|":"
 
 %state STRING
 %state ZERO
@@ -53,12 +53,14 @@ import lexer.HtmlHighlighter.HtmlHighlighter;
         {ReservedWord} {
             String str = yytext();
             htmlHighlighter.reservedKeyWords(str);
+            STP = str;
             return str;
         }
 
         {Operators} {
             String str = yytext();
             htmlHighlighter.operatorsAndPunctuations(yytext());
+            STP = str;
             return str;
         }
 
@@ -76,16 +78,29 @@ import lexer.HtmlHighlighter.HtmlHighlighter;
             htmlHighlighter.operatorsAndPunctuations("\"");
             yybegin(STRING);
         }
+        
 
-        "0" {
-            htmlHighlighter.integerNumbers(yytext());
-            yybegin(ZERO);
+        [0-9]+ {
+            String str = yytext();
+            number.append(str);
+            STP = number.toString();
+            htmlHighlighter.integerNumbers(STP);
+            number.setLength(0);
+            return "decNum";
         }
 
-        [1-9] {
+        [0-9]+[.] {
             number.append(yytext());
-            yybegin(INTEGER);
+            yybegin(REAL);
         }
+
+        0[x|X] {
+            String str = yytext();
+            htmlHighlighter.specialCharacters(str);
+            number.append(str);
+            yybegin(HEX);
+        }
+
 
         [ ] {
             htmlHighlighter.space();
@@ -108,41 +123,10 @@ import lexer.HtmlHighlighter.HtmlHighlighter;
         }
     }
 
-    <ZERO> {
-        [0-9] {
-            number.append(yytext());
-            yybegin(INTEGER);
-        }
-        x|X {
-            String str = yytext();
-            htmlHighlighter.specialCharacters(str);
-            number.append(str);
-            yybegin(HEX);
-        }
-        "." {
-            number.append(yytext());
-            yybegin(REAL);
-        }
-    }
-
-    <INTEGER> {
-        [0-9]* {
-            number.append(yytext());
-            STP = number.toString();
-            htmlHighlighter.integerNumbers(STP);
-            number.setLength(0);
-            yybegin(YYINITIAL);
-            return "decNum";
-        }
-        [0-9]*[.] {
-            number.append(yytext());
-            yybegin(REAL);
-        }
-    }
 
     <REAL> {
 
-        [0-9]*E[\-|+]?[(0-9)]+ {
+        [0-9]*[E|e][\-|+]?[(0-9)]+ {
             number.append(yytext());
             STP = number.toString();
             htmlHighlighter.realNumbers(STP);
