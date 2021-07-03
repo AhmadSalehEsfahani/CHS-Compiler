@@ -2,14 +2,11 @@ class Main {
     let i : int;
 
     main () : int {
-        let a : real;
-        let j : int;
-        let z : int;
+        let z : int[];
         let res : int;
-        a <- 0.2e-3;
-        i <- 3;
-        j <- 2;
-        z <- 2;
-        res <- i + j * z;
+        i <- 1;
+        z <- new Array(int, 100);
+        z[i] <- 5;
+        res <- z[i];
     }
 }

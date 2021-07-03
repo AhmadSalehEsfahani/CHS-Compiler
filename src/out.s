@@ -1,8 +1,8 @@
 .data
+.align 2
 MainANDi: .word 0
-mainANDa: .float 0.0
-mainANDj: .word 0
-mainANDz: .word 0
+mainANDz: .space 400
+mainANDzANDsize: .word 100
 mainANDres: .word 0
 
 .text
@@ -15,25 +15,31 @@ read_string:
 read_float: 
 exception: 
 main:
-la $t0, mainANDa
-li.s $f0 ,0.2e-3
-s.s $f0, ($t0)
-la $t1, MainANDi
-li $t2 ,3
-sw $t2, ($t1)
-la $t3, mainANDj
-li $t4 ,2
-sw $t4, ($t3)
-la $t5, mainANDz
-li $t6 ,2
-sw $t6, ($t5)
-la $t7, mainANDres
-lw $t8 ,MainANDi
-lw $t9 ,mainANDj
-lw $t2 ,mainANDz
-mulo $t2 , $t2 , $t9
-add $t2 , $t2 , $t8
-sw $t2, ($t7)
+la $t0, MainANDi
+li $t1, 1
+sw $t1, ($t0)
+la $t2, mainANDz
+la $t3, mainANDz
+lw $t4, MainANDi
+lw $t5, mainANDzANDsize
+sge $t6, $t4, $t5
+slt $t6, $t4, 0
+beq $t6, 1, exception
+mul $t4, $t4, 4
+add $t3, $t3, $t4
+li $t7, 5
+sw $t7, ($t3)
+la $t8, mainANDres
+la $s0, mainANDz
+lw $t9, MainANDi
+lw $t1, mainANDzANDsize
+sge $t0, $t9, $t1
+slt $t0, $t9, 0
+beq $t0, 1, exception
+mul $t9, $t9, 4
+add $s0, $s0, $t9
+lw $t5, ($s0)
+sw $t5, ($t8)
 termination: 
 li $v0, 10
 li $t0, 0

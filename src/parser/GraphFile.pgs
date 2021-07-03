@@ -877,7 +877,7 @@
       {
         "start": 36,
         "end": 37,
-        "token": "array",
+        "token": "Array",
         "func": "",
         "anchorX": 288.0,
         "anchorY": 327.5,
