@@ -7,6 +7,13 @@ mainANDres: .word 0
 
 .text
 .globl main
+print_string: 
+print_int: 
+print_float: 
+read_int: 
+read_string: 
+read_float: 
+exception: 
 main:
 la $t0, mainANDa
 li.s $f0 ,0.2e-3
@@ -27,13 +34,6 @@ lw $t2 ,mainANDz
 mulo $t2 , $t2 , $t9
 add $t2 , $t2 , $t8
 sw $t2, ($t7)
-print_string: 
-print_int: 
-print_float: 
-read_int: 
-read_string: 
-read_float: 
-exception: 
 termination: 
 li $v0, 10
 li $t0, 0

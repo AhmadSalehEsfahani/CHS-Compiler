@@ -45,6 +45,7 @@ public class CodeGen implements CodeGenerator {
         this.scanner = lexer;
         code.append(".text\n");
         code.append(".globl main\n");
+        codeForGlobalRoutines();
         data.append(".data\n");
     }
 
@@ -654,13 +655,6 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void finalActions() throws FileNotFoundException {
-        codeForPrintString();
-        codeForPrintInt();
-        codeForPrintFloat();
-        codeForReadInt();
-        codeForReadString();
-        codeForReadFloat();
-        codeForExceptionHandling();
         codeForTermination();
 
         Formatter formatter = new Formatter(new FileOutputStream("src/out.s"));
@@ -670,5 +664,15 @@ public class CodeGen implements CodeGenerator {
         formatter.flush();
         formatter.format(code.toString());
         formatter.flush();
+    }
+
+    private void codeForGlobalRoutines(){
+        codeForPrintString();
+        codeForPrintInt();
+        codeForPrintFloat();
+        codeForReadInt();
+        codeForReadString();
+        codeForReadFloat();
+        codeForExceptionHandling();
     }
 }
