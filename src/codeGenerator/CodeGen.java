@@ -44,7 +44,7 @@ public class CodeGen implements CodeGenerator {
     public CodeGen(Lexer lexer) {
         this.scanner = lexer;
         code.append(".text\n");
-        code.append(".globl MainANDmain\n");
+        code.append(".globl main\n");
         data.append(".data\n");
     }
 
@@ -111,8 +111,11 @@ public class CodeGen implements CodeGenerator {
 
                 case "methodDCL":
                     varID = semanticStack.pop();
-
-                    Scope newMethod = new Method(varID, "method", currentScope.address + "AND" + varID, currentScope);
+                    Scope newMethod;
+                    if(varID.equals("main"))
+                        newMethod = new Method(varID, "method",  varID, currentScope);
+                    else
+                        newMethod = new Method(varID, "method", currentScope.address + "AND" + varID, currentScope);
                     currentScope.symbolTable.put(varID, newMethod);
                     currentScope = newMethod;
                     inMethodInputDCL = true;
