@@ -7,10 +7,12 @@ class Main {
         let i : int;
 
         message <- "not working ";
-        i <- 5;
+        i <- 4;
 
         if i==5 then
-            message <- "working ";
+            message <- "i is equal to 5 ";
+        else
+            message <- "i is not equal to 5 ";
         fi
 
         out_string(message);

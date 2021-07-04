@@ -24,15 +24,19 @@ public class CodeGen implements CodeGenerator {
     private Scope currentScope = topMostScope;
 
     //common routines name
-    private final static String exceptionRoutineAddr = "exception";
-    private final static String printInt = "print_int";
-    private final static String printFloat = "print_float";
-    private final static String printString = "print_string";
-    private final static String readInt = "read_int";
-    private final static String readFloat = "read_float";
-    private final static String readString = "read_string";
-    private final static String stringMaxSize = "20";
-    private final static String endCondLabel = "endCondition";
+    private final static String EXCEPTION_ROUTINE_LABEL = "exception";
+    private final static String PRINT_INT_LABEL = "print_int";
+    private final static String PRINT_FLOAT_LABEL = "print_float";
+    private final static String PRINT_STRING_LABEL = "print_string";
+    private final static String READ_INT_LABEL = "read_int";
+    private final static String READ_FLOAT_LABEL = "read_float";
+    private final static String READ_STRING_LABEL = "read_string";
+    private final static String STRING_MAX_SIZE = "20";
+    private final static String END_IF_LABEL = "fi";
+    private final static String END_ELSE_LABEL = "esle";
+    private final static String ELSE_LABEL = "else";
+    private final static String BEGIN_LOOP_LABEL = "loop";
+    private final static String END_LOOP_LABEL = "pool";
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
@@ -40,7 +44,7 @@ public class CodeGen implements CodeGenerator {
     private ArrayType array;
     private Data globalData;
     private int literalCounter = 1;
-    private int endOfIfCounter = 1;
+    private int codeLabelingCounter = 1;
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -263,6 +267,14 @@ public class CodeGen implements CodeGenerator {
                     comp_if_jump();
                     break;
 
+                case "else_jump":
+                    else_jump();
+                    break;
+
+                case "else_jump_comp":
+                    else_jump_comp();
+                    break;
+
                 case "finalize":
                     finalActions();
                     break;
@@ -273,10 +285,31 @@ public class CodeGen implements CodeGenerator {
         }
     }
 
+    private void else_jump_comp(){
+        int index = Integer.parseInt(semanticStack.pop());
+        String label = END_ELSE_LABEL + codeLabelingCounter;
+        codeLabelingCounter++;
+        code.append(label).append(":").append("\n");
+        code.replace(index, index+2, code.substring(index, index+2)+label);
+    }
+
+    private void else_jump(){
+        int indexIfJump = Integer.parseInt(semanticStack.pop());
+        String hereLabel = ELSE_LABEL + codeLabelingCounter;
+        codeLabelingCounter++;
+
+        code.replace(indexIfJump, indexIfJump+10, code.substring(indexIfJump, indexIfJump+10)+hereLabel);
+
+        code.append("b ").append("\n");
+        code.append(hereLabel).append(":").append("\n");
+        String index = String.valueOf(code.lastIndexOf("b "));
+        semanticStack.push(index);
+    }
+
     private void comp_if_jump(){
         int jump_index = Integer.parseInt(semanticStack.pop());
-        String addrOfHere = endCondLabel + endOfIfCounter;
-        endOfIfCounter++;
+        String addrOfHere = END_IF_LABEL + codeLabelingCounter;
+        codeLabelingCounter++;
         code.append(addrOfHere).append(": \n");
         code.replace(jump_index, jump_index+10, code.substring(jump_index, jump_index+10)+addrOfHere);
     }
@@ -290,7 +323,7 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void read_float(){
-        code.append("jal ").append(readFloat).append("\n");
+        code.append("jal ").append(READ_FLOAT_LABEL).append("\n");
         String reg = RegisterPool.getFloat();
         code.append("mov.s ").append(reg).append(", ").append("$f0").append("\n");
         semanticStack.push(reg);
@@ -299,17 +332,17 @@ public class CodeGen implements CodeGenerator {
     private void read_string(){
         String address = "literalAND" + literalCounter;
         literalCounter ++;
-        data.append(address).append(": .space ").append(stringMaxSize).append("\n");
+        data.append(address).append(": .space ").append(STRING_MAX_SIZE).append("\n");
         code.append("la $a0, ").append(address).append("\n");
-        code.append("li $a1, ").append(stringMaxSize).append("\n");
-        code.append("jal ").append(readString).append("\n");
+        code.append("li $a1, ").append(STRING_MAX_SIZE).append("\n");
+        code.append("jal ").append(READ_STRING_LABEL).append("\n");
         String regAddr = RegisterPool.getSavedTemp();
         code.append("move ").append(regAddr).append(", ").append("$a0").append("\n");
         semanticStack.push(regAddr);
     }
 
     private void read_int(){
-        code.append("jal ").append(readInt).append("\n");
+        code.append("jal ").append(READ_INT_LABEL).append("\n");
         String reg = RegisterPool.getTemp();
         code.append("move ").append(reg).append(", ").append("$v0 ").append("\n");
         semanticStack.push(reg);
@@ -321,7 +354,7 @@ public class CodeGen implements CodeGenerator {
             throw new CoolCompileError("it is not float in out_float");
         }
         code.append("mov.s $f12, ").append(expr).append("\n");
-        code.append("jal ").append(printFloat).append("\n");
+        code.append("jal ").append(PRINT_FLOAT_LABEL).append("\n");
         RegisterPool.backFloat(expr);
     }
 
@@ -331,7 +364,7 @@ public class CodeGen implements CodeGenerator {
             throw new CoolCompileError("it is not string in print_string");
         }
         code.append("move $a0, ").append(strReg).append("\n");
-        code.append("jal ").append(printString).append("\n");
+        code.append("jal ").append(PRINT_STRING_LABEL).append("\n");
         RegisterPool.backSavedTemp(strReg);
     }
 
@@ -341,7 +374,7 @@ public class CodeGen implements CodeGenerator {
             throw new CoolCompileError("it is not int in print_int");
         }
         code.append("move $a0, ").append(expr).append("\n");
-        code.append("jal ").append(printInt).append("\n");
+        code.append("jal ").append(PRINT_INT_LABEL).append("\n");
         RegisterPool.backTemp(expr);
     }
 
@@ -694,7 +727,7 @@ public class CodeGen implements CodeGenerator {
         code.append("lw ").append(sizeAddrReg).append(", ").append(arrayAddr + "AND" + "size").append("\n");
         code.append("sge ").append(compResReg).append(", ").append(indexReg).append(", ").append(sizeAddrReg).append("\n");
         code.append("slt ").append(compResReg).append(", ").append(indexReg).append(", ").append("0").append("\n");
-        code.append("beq ").append(compResReg).append(", ").append("1").append(", ").append(exceptionRoutineAddr).append("\n");
+        code.append("beq ").append(compResReg).append(", ").append("1").append(", ").append(EXCEPTION_ROUTINE_LABEL).append("\n");
 
         RegisterPool.backTemp(sizeAddrReg);
         RegisterPool.backTemp(compResReg);
@@ -779,35 +812,35 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void codeForPrintString() {
-        code.append(printString).append(": ").append("\n");
+        code.append(PRINT_STRING_LABEL).append(": ").append("\n");
         code.append("li $v0, 4").append("\n");
         code.append("syscall").append("\n");
         code.append("jr $ra").append("\n");
     }
 
     private void codeForPrintInt() {
-        code.append(printInt).append(": ").append("\n");
+        code.append(PRINT_INT_LABEL).append(": ").append("\n");
         code.append("li $v0, 1").append("\n");
         code.append("syscall").append("\n");
         code.append("jr $ra").append("\n");
     }
 
     private void codeForPrintFloat() {
-        code.append(printFloat).append(": ").append("\n");
+        code.append(PRINT_FLOAT_LABEL).append(": ").append("\n");
         code.append("li $v0, 2").append("\n");
         code.append("syscall").append("\n");
         code.append("jr $ra").append("\n");
     }
 
     private void codeForReadInt() {
-        code.append(readInt).append(": ").append("\n");
+        code.append(READ_INT_LABEL).append(": ").append("\n");
         code.append("li $v0, 5").append("\n");
         code.append("syscall").append("\n");
         code.append("jr $ra").append("\n");
     }
 
     private void codeForReadString() {
-        code.append(readString).append(": ").append("\n");
+        code.append(READ_STRING_LABEL).append(": ").append("\n");
         code.append("li $v0, 8").append("\n");
         code.append("syscall").append("\n");
         code.append("jr $ra").append("\n");
@@ -815,14 +848,14 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void codeForReadFloat() {
-        code.append(readFloat).append(": ").append("\n");
+        code.append(READ_FLOAT_LABEL).append(": ").append("\n");
         code.append("li $v0, 6").append("\n");
         code.append("syscall").append("\n");
         code.append("jr $ra").append("\n");
     }
 
     private void codeForExceptionHandling() {
-        code.append(exceptionRoutineAddr).append(": ").append("\n");
+        code.append(EXCEPTION_ROUTINE_LABEL).append(": ").append("\n");
     }
 
     private void codeForTermination() {
