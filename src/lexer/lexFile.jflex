@@ -29,7 +29,7 @@ import lexer.HtmlHighlighter.HtmlHighlighter;
  Comment = {TraditionalComment} | {EndOfLineComment}
 
 
- ReservedWord = "class"|"void"|"int"|"real"|"bool"|"string"|"for"|"while"|"if"|"else"|"return"|"break"|"rof"|"let"|"fi"|"Array"|"in_string"|"out_string"|"new"|"continue"|"loop"|"pull"|"in_int"|"out_int"|"then"|"len"
+ ReservedWord = "class"|"void"|"int"|"real"|"bool"|"string"|"for"|"while"|"if"|"else"|"return"|"break"|"rof"|"let"|"fi"|"Array"|"in_string"|"out_string"|"new"|"continue"|"loop"|"pull"|"in_int"|"out_int"|"then"|"len"|"out_real"|"in_real"
 
 
  Identifier = [a-zA-Z][a-zA-Z0-9_]{0,30}

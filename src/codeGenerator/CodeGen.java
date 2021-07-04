@@ -37,6 +37,7 @@ public class CodeGen implements CodeGenerator {
     private boolean newArrayInRight = false;
     private ArrayType array;
     private Data globalData;
+    private int literalCounter = 1;
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -226,8 +227,21 @@ public class CodeGen implements CodeGenerator {
                     sub1After();
                     break;
 
+                case "out_int":
+                    print_int();
+                    break;
+
+                case "out_string":
+                    print_string();
+                    break;
+
+                case "out_real":
+                    print_float();
+                    break;
+
                 case "finalize":
                     finalActions();
+                    break;
             }
 
         } catch (Exception e) {
@@ -235,14 +249,46 @@ public class CodeGen implements CodeGenerator {
         }
     }
 
+    private void print_float() throws CoolCompileError {
+        String expr = semanticStack.pop();
+        if(!expr.contains("$f")){
+            throw new CoolCompileError("it is not float in out_float");
+        }
+        code.append("mov.s $f12, ").append(expr).append("\n");
+        code.append("jal ").append(printFloat).append("\n");
+        RegisterPool.backFloat(expr);
+    }
+
+    private void print_string() throws CoolCompileError {
+        String strReg = semanticStack.pop();
+        if(!strReg.contains("$s")){
+            throw new CoolCompileError("it is not string in print_string");
+        }
+        code.append("move $a0, ").append(strReg).append("\n");
+        code.append("jal ").append(printString).append("\n");
+        RegisterPool.backSavedTemp(strReg);
+    }
+
+    private void print_int() throws CoolCompileError {
+        String expr = semanticStack.pop();
+        if(!expr.contains("$t")){
+            throw new CoolCompileError("it is not int in print_int");
+        }
+        code.append("move $a0, ").append(expr).append("\n");
+        code.append("jal ").append(printInt).append("\n");
+        RegisterPool.backTemp(expr);
+    }
+
     private void setLiteralInData() {
         String register;
         String literal = Lexer.STP;
-        data.append("literalAND").append(literal).append(" : ").append(".ascii ")
+        String addr = Integer.toString(literalCounter);
+        literalCounter++;
+        data.append("literalAND").append(addr).append(" : ").append(".ascii ")
                 .append("\"").append(literal).append("\"").append("\n");
         register = RegisterPool.getSavedTemp();
         code.append("la ").append(register).append(", ")
-                .append("literalAND").append(literal).append("\n");
+                .append("literalAND").append(addr).append("\n");
         semanticStack.push(register);
     }
 
@@ -665,14 +711,23 @@ public class CodeGen implements CodeGenerator {
 
     private void codeForPrintString() {
         code.append(printString).append(": ").append("\n");
+        code.append("li $v0, 4").append("\n");
+        code.append("syscall").append("\n");
+        code.append("jr $ra").append("\n");
     }
 
     private void codeForPrintInt() {
         code.append(printInt).append(": ").append("\n");
+        code.append("li $v0, 1").append("\n");
+        code.append("syscall").append("\n");
+        code.append("jr $ra").append("\n");
     }
 
     private void codeForPrintFloat() {
         code.append(printFloat).append(": ").append("\n");
+        code.append("li $v0, 2").append("\n");
+        code.append("syscall").append("\n");
+        code.append("jr $ra").append("\n");
     }
 
     private void codeForReadInt() {
