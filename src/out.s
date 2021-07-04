@@ -4,9 +4,9 @@ toAlign: .space 404
 MainANDi: .word 0
 mainANDmessage: .word 0
 mainANDi: .word 0
-literalAND1 : .asciiz "not working "
-literalAND2 : .asciiz "i is equal to 5 "
-literalAND3 : .asciiz "i is not equal to 5 "
+mainANDj: .word 0
+literalAND1 : .asciiz "j = "
+literalAND2 : .asciiz "i = "
 
 .text
 .globl main
@@ -36,28 +36,47 @@ syscall
 jr $ra
 exception: 
 main:
-la $t0, mainANDmessage
+la $t0, mainANDi
+li $t1, 5
+sw $t1, ($t0)
+la $t2, mainANDj
+li $t3, 0
+sw $t3, ($t2)
+loop1: 
+lw $t4, mainANDi
+li $t5, 0
+slt $t5,  $t5,  $t4
+beqz $t5, pool2
+la $t6, mainANDj
+lw $t7, mainANDj
+li $t8, 1
+add $t8,  $t8,  $t7
+sw $t8, ($t6)
+la $t9, mainANDi
+lw $t1, mainANDi
+li $t0, 1
+sub $t0,  $t0,  $t1
+sw $t0, ($t9)
+b loop1
+pool2: 
+la $t3, mainANDmessage
 la $s0, literalAND1
-sw $s0, ($t0)
-la $t1, mainANDi
-li $t2, 4
-sw $t2, ($t1)
-lw $t3, mainANDi
-li $t4, 5
-seq $t4,  $t4,  $t3
-beqz $t4, else1
-la $t5, mainANDmessage
-la $s1, literalAND2
-sw $s1, ($t5)
-b esle2
-else1:
-la $t6, mainANDmessage
-la $s2, literalAND3
-sw $s2, ($t6)
-esle2:
+sw $s0, ($t3)
+lw $s1, mainANDmessage
+move $a0, $s1
+jal print_string
+lw $t2, mainANDj
+move $a0, $t2
+jal print_int
+la $t4, mainANDmessage
+la $s2, literalAND2
+sw $s2, ($t4)
 lw $s3, mainANDmessage
 move $a0, $s3
 jal print_string
+lw $t5, mainANDi
+move $a0, $t5
+jal print_int
 termination: 
 li $v0, 10
 li $t0, 0

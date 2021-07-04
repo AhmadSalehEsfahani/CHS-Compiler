@@ -5,17 +5,23 @@ class Main {
 
         let message : string;
         let i : int;
+        let j : int;
 
-        message <- "not working ";
-        i <- 4;
 
-        if i==5 then
-            message <- "i is equal to 5 ";
-        else
-            message <- "i is not equal to 5 ";
-        fi
+        i <- 5;
+        j <- 0;
 
+        while i > 0 loop
+            j <- j + 1;
+            i <- i - 1;
+        pool
+
+        message <- "j = ";
         out_string(message);
+        out_int(j);
+        message <- "i = ";
+        out_string(message);
+        out_int(i);
 
     }
 }

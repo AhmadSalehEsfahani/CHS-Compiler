@@ -275,6 +275,18 @@ public class CodeGen implements CodeGenerator {
                     else_jump_comp();
                     break;
 
+                case "label_and_push":
+                    label_and_push();
+                    break;
+
+                case "loop_cond_jump":
+                    loop_cond_jump();
+                    break;
+
+                case "finish_loop":
+                    finish_loop();
+                    break;
+
                 case "finalize":
                     finalActions();
                     break;
@@ -283,6 +295,36 @@ public class CodeGen implements CodeGenerator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void finish_loop(){
+        int index = Integer.parseInt(semanticStack.pop());
+        String loopLabel = semanticStack.pop();
+
+        String endLabel = END_LOOP_LABEL + codeLabelingCounter;
+        codeLabelingCounter++;
+
+        code.replace(index, index+10, code.substring(index, index+10)+endLabel);
+        code.append("b ").append(loopLabel).append("\n");
+        code.append(endLabel).append(": ").append("\n");
+    }
+
+    private void loop_cond_jump(){
+        String expr = semanticStack.pop();
+        String loopLabel = semanticStack.pop();
+        semanticStack.push(loopLabel);
+
+        code.append("beqz ").append(expr).append(", ").append("\n");
+        String lastIndex = String.valueOf(code.lastIndexOf("beqz "));
+        RegisterPool.backTemp(expr);
+        semanticStack.push(lastIndex);
+    }
+
+    private void label_and_push(){
+        String label = BEGIN_LOOP_LABEL + codeLabelingCounter;
+        codeLabelingCounter++;
+        code.append(label).append(": \n");
+        semanticStack.push(label);
     }
 
     private void else_jump_comp(){
