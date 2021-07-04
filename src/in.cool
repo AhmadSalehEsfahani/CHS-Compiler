@@ -2,21 +2,18 @@ class Main {
     let i : int;
 
     main () : int {
-        let z : int[];
-        let res : int;
-        let j : int;
-        let floatNum : real;
+
         let message : string;
-        j <- in_int();
-        i <- 1;
-        z <- new Array(int, 100);
-        z[i] <- 5;
-        res <- z[i] * 5;
-        message <- in_string();
-        floatNum <- in_real();
+        let i : int;
+
+        message <- "not working ";
+        i <- 5;
+
+        if i==5 then
+            message <- "working ";
+        fi
+
         out_string(message);
-        out_int(res + 5);
-        out_string(" ");
-        out_real(floatNum);
+
     }
 }

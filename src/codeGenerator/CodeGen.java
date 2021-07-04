@@ -32,6 +32,7 @@ public class CodeGen implements CodeGenerator {
     private final static String readFloat = "read_float";
     private final static String readString = "read_string";
     private final static String stringMaxSize = "20";
+    private final static String endCondLabel = "endCondition";
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
@@ -39,6 +40,7 @@ public class CodeGen implements CodeGenerator {
     private ArrayType array;
     private Data globalData;
     private int literalCounter = 1;
+    private int endOfIfCounter = 1;
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -50,6 +52,7 @@ public class CodeGen implements CodeGenerator {
         codeForGlobalRoutines();
         data.append(".data\n");
         data.append(".align 2\n");
+        data.append("toAlign: .space 404\n");
     }
 
     @Override
@@ -252,6 +255,14 @@ public class CodeGen implements CodeGenerator {
                     read_float();
                     break;
 
+                case "if_jump":
+                    if_jump();
+                    break;
+
+                case "comp_if_jump":
+                    comp_if_jump();
+                    break;
+
                 case "finalize":
                     finalActions();
                     break;
@@ -260,6 +271,22 @@ public class CodeGen implements CodeGenerator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void comp_if_jump(){
+        int jump_index = Integer.parseInt(semanticStack.pop());
+        String addrOfHere = endCondLabel + endOfIfCounter;
+        endOfIfCounter++;
+        code.append(addrOfHere).append(": \n");
+        code.replace(jump_index, jump_index+10, code.substring(jump_index, jump_index+10)+addrOfHere);
+    }
+
+    private void if_jump(){
+        String expr = semanticStack.pop();
+        code.append("beqz ").append(expr).append(", ").append("\n");
+        String lastIndex = String.valueOf(code.lastIndexOf("beqz "));
+        RegisterPool.backTemp(expr);
+        semanticStack.push(lastIndex);
     }
 
     private void read_float(){
@@ -323,7 +350,7 @@ public class CodeGen implements CodeGenerator {
         String literal = Lexer.STP;
         String addr = Integer.toString(literalCounter);
         literalCounter++;
-        data.append("literalAND").append(addr).append(" : ").append(".ascii ")
+        data.append("literalAND").append(addr).append(" : ").append(".asciiz ")
                 .append("\"").append(literal).append("\"").append("\n");
         register = RegisterPool.getSavedTemp();
         code.append("la ").append(register).append(", ")
@@ -462,7 +489,6 @@ public class CodeGen implements CodeGenerator {
         } else {
             semanticStack.push(varID);
         }
-        return;
     }
 
     private void unaryValueBefore(int value) throws CoolCompileError {
@@ -645,9 +671,13 @@ public class CodeGen implements CodeGenerator {
             case "array":
                 array = (ArrayType) variable;
             case "method":
-            case "string":
                 register = RegisterPool.getSavedTemp();
                 code.append("la ").append(register).append(", ").append(variable.address).append("\n");
+                break;
+
+            case "string":
+                register = RegisterPool.getSavedTemp();
+                code.append("lw ").append(register).append(", ").append(variable.address).append("\n");
                 break;
 
             default:

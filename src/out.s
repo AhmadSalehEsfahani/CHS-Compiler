@@ -1,5 +1,6 @@
 .data
 .align 2
+toAlign: .space 404
 MainANDi: .word 0
 mainANDz: .space 400
 mainANDzANDsize: .word 100
@@ -8,7 +9,7 @@ mainANDj: .word 0
 mainANDfloatNum: .float 0.0
 mainANDmessage: .word 0
 literalAND1: .space 20
-literalAND2 : .ascii " "
+literalAND2 : .asciiz " "
 
 .text
 .globl main
@@ -79,7 +80,7 @@ la $t9, mainANDfloatNum
 jal read_float
 mov.s $f1, $f0
 s.s $f1, ($t9)
-la $s2, mainANDmessage
+lw $s2, mainANDmessage
 move $a0, $s2
 jal print_string
 lw $t3, mainANDres
