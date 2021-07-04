@@ -7,13 +7,13 @@ class Main {
         let j : int;
         let floatNum : real;
         let message : string;
-        j <- 5;
+        j <- in_int();
         i <- 1;
         z <- new Array(int, 100);
         z[i] <- 5;
         res <- z[i] * 5;
-        message <- "it is result : ";
-        floatNum <- 1.1 * 2.3e-3;
+        message <- in_string();
+        floatNum <- in_real();
         out_string(message);
         out_int(res + 5);
         out_string(" ");

@@ -7,7 +7,7 @@ mainANDres: .word 0
 mainANDj: .word 0
 mainANDfloatNum: .float 0.0
 mainANDmessage: .word 0
-literalAND1 : .ascii "it is result : "
+literalAND1: .space 20
 literalAND2 : .ascii " "
 
 .text
@@ -25,12 +25,22 @@ li $v0, 2
 syscall
 jr $ra
 read_int: 
+li $v0, 5
+syscall
+jr $ra
 read_string: 
+li $v0, 8
+syscall
+jr $ra
 read_float: 
+li $v0, 6
+syscall
+jr $ra
 exception: 
 main:
 la $t0, mainANDj
-li $t1, 5
+jal read_int
+move $t1, $v0 
 sw $t1, ($t0)
 la $t2, MainANDi
 li $t3, 1
@@ -60,12 +70,14 @@ li $t8, 5
 mulo $t8,  $t8,  $t7
 sw $t8, ($t1)
 la $t6, mainANDmessage
-la $s1, literalAND1
+la $a0, literalAND1
+li $a1, 20
+jal read_string
+move $s1, $a0
 sw $s1, ($t6)
 la $t9, mainANDfloatNum
-li.s $f0, 1.1
-li.s $f1, 2.3e-3
-mul.s $f1,  $f1,  $f0
+jal read_float
+mov.s $f1, $f0
 s.s $f1, ($t9)
 la $s2, mainANDmessage
 move $a0, $s2

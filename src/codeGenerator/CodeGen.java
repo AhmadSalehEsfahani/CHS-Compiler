@@ -31,6 +31,7 @@ public class CodeGen implements CodeGenerator {
     private final static String readInt = "read_int";
     private final static String readFloat = "read_float";
     private final static String readString = "read_string";
+    private final static String stringMaxSize = "20";
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
@@ -239,6 +240,18 @@ public class CodeGen implements CodeGenerator {
                     print_float();
                     break;
 
+                case "in_int":
+                    read_int();
+                    break;
+
+                case "in_string":
+                    read_string();
+                    break;
+
+                case "in_real":
+                    read_float();
+                    break;
+
                 case "finalize":
                     finalActions();
                     break;
@@ -247,6 +260,32 @@ public class CodeGen implements CodeGenerator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void read_float(){
+        code.append("jal ").append(readFloat).append("\n");
+        String reg = RegisterPool.getFloat();
+        code.append("mov.s ").append(reg).append(", ").append("$f0").append("\n");
+        semanticStack.push(reg);
+    }
+
+    private void read_string(){
+        String address = "literalAND" + literalCounter;
+        literalCounter ++;
+        data.append(address).append(": .space ").append(stringMaxSize).append("\n");
+        code.append("la $a0, ").append(address).append("\n");
+        code.append("li $a1, ").append(stringMaxSize).append("\n");
+        code.append("jal ").append(readString).append("\n");
+        String regAddr = RegisterPool.getSavedTemp();
+        code.append("move ").append(regAddr).append(", ").append("$a0").append("\n");
+        semanticStack.push(regAddr);
+    }
+
+    private void read_int(){
+        code.append("jal ").append(readInt).append("\n");
+        String reg = RegisterPool.getTemp();
+        code.append("move ").append(reg).append(", ").append("$v0 ").append("\n");
+        semanticStack.push(reg);
     }
 
     private void print_float() throws CoolCompileError {
@@ -732,14 +771,24 @@ public class CodeGen implements CodeGenerator {
 
     private void codeForReadInt() {
         code.append(readInt).append(": ").append("\n");
+        code.append("li $v0, 5").append("\n");
+        code.append("syscall").append("\n");
+        code.append("jr $ra").append("\n");
     }
 
     private void codeForReadString() {
         code.append(readString).append(": ").append("\n");
+        code.append("li $v0, 8").append("\n");
+        code.append("syscall").append("\n");
+        code.append("jr $ra").append("\n");
+
     }
 
     private void codeForReadFloat() {
         code.append(readFloat).append(": ").append("\n");
+        code.append("li $v0, 6").append("\n");
+        code.append("syscall").append("\n");
+        code.append("jr $ra").append("\n");
     }
 
     private void codeForExceptionHandling() {
