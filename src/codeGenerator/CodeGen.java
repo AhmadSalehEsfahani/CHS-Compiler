@@ -311,9 +311,7 @@ public class CodeGen implements CodeGenerator {
 
     private void loop_cond_jump(){
         String expr = semanticStack.pop();
-        String loopLabel = semanticStack.pop();
-        semanticStack.push(loopLabel);
-
+        
         code.append("beqz ").append(expr).append(", ").append("\n");
         String lastIndex = String.valueOf(code.lastIndexOf("beqz "));
         RegisterPool.backTemp(expr);
