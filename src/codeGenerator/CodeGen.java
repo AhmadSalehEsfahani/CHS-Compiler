@@ -714,6 +714,8 @@ public class CodeGen implements CodeGenerator {
             assignVarToReg(currentScope.symbolTable.get(id));
         } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
             assignVarToReg(currentScope.previousScope.symbolTable.get(id));
+        }else if (currentScope.previousScope.previousScope.symbolTable.containsKey(id)) {
+            return;
         } else {
             throw new CoolCompileError("id not defined");
         }

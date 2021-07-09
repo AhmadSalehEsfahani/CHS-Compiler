@@ -187,6 +187,7 @@ sw $t7, ($t6)
 b BEGIN_UPDATE11
 pool13: 
 la $t1, mainANDt
+sw $t1, ($t9)
 lw $t5, mainANDt
 move $a0, $t5
 jal print_int
@@ -198,28 +199,28 @@ li $t0, 0
 sw $t0, ($t3)
 loop14: 
 lw $t7, MainANDi
-lw $t5, MainANDn
-slt $t5,  $t7,  $t5
-beqz $t5, pool17
+lw $t1, MainANDn
+slt $t1,  $t7,  $t1
+beqz $t1, pool17
 b BEGIN_STATEMENT16
 BEGIN_UPDATE15:
-la $t0, MainANDi
-lw $t3, MainANDi
-li $t7, 1
-add $t7,  $t3,  $t7
-sw $t7, ($t0)
+la $t9, MainANDi
+lw $t5, MainANDi
+li $t0, 1
+add $t0,  $t5,  $t0
+sw $t0, ($t9)
 b loop14
 BEGIN_STATEMENT16:
 la $s5, MainANDlist
-lw $t5, MainANDi
-lw $t3, MainANDlistANDsize
-sge $t7, $t5, $t3
-slt $t7, $t5, 0
-beq $t7, 1, exception
-mul $t5, $t5, 4
-add $s5, $s5, $t5
-lw $t0, ($s5)
-move $a0, $t0
+lw $t3, MainANDi
+lw $t7, MainANDlistANDsize
+sge $t1, $t3, $t7
+slt $t1, $t3, 0
+beq $t1, 1, exception
+mul $t3, $t3, 4
+add $s5, $s5, $t3
+lw $t5, ($s5)
+move $a0, $t5
 jal print_int
 la $s6, literalAND2
 move $a0, $s6
