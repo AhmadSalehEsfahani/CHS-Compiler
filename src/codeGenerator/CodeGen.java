@@ -45,6 +45,8 @@ public class CodeGen implements CodeGenerator {
     private final static String END_LOOP_LABEL = "pool";
     private final static String BEGIN_UPDATE_LABEL = "BEGIN_UPDATE";
     private final static String BEGIN_STATEMENT = "BEGIN_STATEMENT";
+    private final static String EXCEPTION_MESSAGE = "run time exception ...";
+    private final static String EXCEPTION_LABEL = "EXP";
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
@@ -69,6 +71,7 @@ public class CodeGen implements CodeGenerator {
         data.append(".data\n");
         data.append(".align 2\n");
         data.append("toAlign: .space 404\n");
+        data.append(EXCEPTION_LABEL + ": .asciiz " + "\"" + EXCEPTION_MESSAGE + "\"\n");
     }
 
     @Override
@@ -194,7 +197,7 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "greaterThanEqual":
-                    compressionFunction("sge", "c.ge.s");//check
+                    compressionFunction("sgt", "c.ge.s");//check
                     break;
 
                 case "lessThan":
@@ -991,7 +994,9 @@ public class CodeGen implements CodeGenerator {
         String compResReg = RegisterPool.getTemp();
 
         code.append("lw ").append(sizeAddrReg).append(", ").append(arrayAddr + "AND" + "size").append("\n");
-        code.append("sge ").append(compResReg).append(", ").append(indexReg).append(", ").append(sizeAddrReg).append("\n");
+        code.append("addi ").append(sizeAddrReg).append(", ").append("-1").append("\n");
+        code.append("sgt ").append(compResReg).append(", ").append(indexReg).append(", ").append(sizeAddrReg).append("\n");
+        code.append("beq ").append(compResReg).append(", ").append("1").append(", ").append(EXCEPTION_ROUTINE_LABEL).append("\n");
         code.append("slt ").append(compResReg).append(", ").append(indexReg).append(", ").append("0").append("\n");
         code.append("beq ").append(compResReg).append(", ").append("1").append(", ").append(EXCEPTION_ROUTINE_LABEL).append("\n");
 
@@ -1122,6 +1127,12 @@ public class CodeGen implements CodeGenerator {
 
     private void codeForExceptionHandling() {
         code.append(EXCEPTION_ROUTINE_LABEL).append(": ").append("\n");
+        code.append("la $a0, " + EXCEPTION_LABEL).append("\n");
+        code.append("li $v0, 4").append("\n");
+        code.append("syscall").append("\n");
+        code.append("jr $ra").append("\n");
+        code.append("b termination\n");
+
     }
 
     private void codeForTermination() {
