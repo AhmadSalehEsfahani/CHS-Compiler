@@ -1,15 +1,29 @@
 class Main {
     let i : int;
+    let j : int;
+    let n : int;
+    let list : int[];
+
+    bubbleSort() : int {
+        for (i <- 0 ; i < n-1 ; i <- i+1)
+            for (j <- 0 ; j < n-i-1 ; j <- j+1)
+                if list[j] > list[j+1] then
+                   let t : int;
+                   t <- list[j];
+                   list[j] <- list[j+1];
+                   list[j+1] <- t;
+                fi
+            rof
+        rof
+
+        return 1;
+    }
 
     main () : int {
 
-        let i : int;
-        let j : int;
-        let n : int;
-        let list : int[];
+        let t : int;
 
-        list <- new Array(int, 5);
-
+        list <- new Array(int, 100);
 
         n <- in_int();
 
@@ -17,18 +31,11 @@ class Main {
             list[i] <- in_int();
         rof
 
-        for (i <- 0 ; i < n-1 ; i <- i+1)
-            for (j <- 0 ; j < n-i-1 ; j <- j+1)
-                if list[j] > list[j+1] then
-                    let t : int;
-                    t <- list[j];
-                    list[j] <- list[j+1];
-                    list[j+1] <- t;
-                fi
-            rof
-        rof
-        out_string("Sorted result is : \n");
-        for (i <- 0; i < = n; i <- i+1)
+        t <- Main.bubbleSort();
+        out_int(t);
+
+        out_string("sorted result is : ");
+        for (i <- 0; i < n ; i <- i+1)
             out_int(list[i]);
             out_string(" ");
         rof

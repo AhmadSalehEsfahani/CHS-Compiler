@@ -468,7 +468,7 @@ public class CodeGen implements CodeGenerator {
                 VarType varType = (VarType) calleeMethod.symbolTable.get(key);
                 if (varType.isInput && methodArgumentsCount-- > 0) {
                     String topExpr = semanticStack.pop();
-                    code.append("sw ").append(topExpr).append(" , ").append(varType.address).append("\n");
+                    code.append("sw ").append(topExpr).append(", ").append(varType.address).append("\n");
 
                     if (topExpr.charAt(1) == 't') {
                         RegisterPool.backTemp(topExpr);
@@ -1014,8 +1014,10 @@ public class CodeGen implements CodeGenerator {
             newArrayInRight = false;
             return;
         }
+
         String rightReg = semanticStack.pop();
         String leftReg = semanticStack.pop();
+
 
         switch (globalData.type) {
             case "int":

@@ -14,10 +14,11 @@ public class RegisterPool {
     public static LinkedList<String> inUseSavedTemporaryRegisters = new LinkedList<>();
     public static LinkedList<String> inUseArgumentRegisters = new LinkedList<>();
     public static LinkedList<String> inUseFloatRegisters = new LinkedList<>();
+    public static LinkedList<String> MethodResult = new LinkedList<>();
 
     static {
         temporaryRegisters.addAll(Arrays.asList("$t0", "$t1", "$t2", "$t3",
-                                                "$t4", "$t5", "$t6", "$t7", "$t8", "$t9"));
+                                                "$t4", "$t5", "$t6", "$t7", "$t8"));
         savedTemporaryRegisters.addAll(Arrays.asList("$s0", "$s1", "$s2", "$s3", "$s4", "$s5"
                                                         , "$s6", "$s7"));
         argumentRegisters.addAll(Arrays.asList("$a0", "$a1", "$a2", "$a3"));
@@ -27,6 +28,7 @@ public class RegisterPool {
                                                 , "$f14", "$f15", "$f16", "$f17", "$f18", "$f19"
                                                 , "$f20", "$f21", "$f22", "$f23", "$f24", "$f25"
                                                 , "$f26", "$f27", "$f28", "$f29", "$f30", "$f31"));
+        MethodResult.add("$t9");
     }
 
     public static String getSP(){
