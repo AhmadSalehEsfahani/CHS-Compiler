@@ -20,7 +20,13 @@ class Main {
 
         for (j <- 0; j < 5; j <- j+1)
              out_int(list[j]);
-             out_string(" + ");
+             if j != 4 then
+                 i <- 0;
+                 while i < 5 loop
+                    out_string("*");
+                    ++i;
+                 pool
+             fi
         rof
 
     }

@@ -8,7 +8,7 @@ mainANDj: .word 0
 mainANDlist: .space 20
 mainANDlistANDsize: .word 5
 literalAND1 : .asciiz "elements are : \n"
-literalAND2 : .asciiz " + "
+literalAND2 : .asciiz "*"
 
 .text
 .globl main
@@ -80,7 +80,7 @@ loop5:
 lw $t5, mainANDj
 li $t2, 5
 slt $t2,  $t5,  $t2
-beqz $t2, pool8
+beqz $t2, pool11
 b BEGIN_STATEMENT7
 BEGIN_UPDATE6:
 la $t1, mainANDj
@@ -101,11 +101,29 @@ add $s1, $s1, $t4
 lw $t5, ($s1)
 move $a0, $t5
 jal print_int
+lw $t2, mainANDj
+li $t9, 4
+sne $t9,  $t2,  $t9
+beqz $t9, fi10
+la $t3, mainANDi
+li $t1, 0
+sw $t1, ($t3)
+loop8: 
+lw $t7, mainANDi
+li $t6, 5
+slt $t6,  $t7,  $t6
+beqz $t6, pool9
 la $s2, literalAND2
 move $a0, $s2
 jal print_string
+lw $t4,  mainANDi
+addi $t4,  $t4,  1
+sw $t4,  mainANDi
+b loop8
+pool9: 
+fi10: 
 b BEGIN_UPDATE6
-pool8: 
+pool11: 
 termination: 
 li $v0, 10
 li $t0, 0

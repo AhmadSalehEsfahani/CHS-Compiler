@@ -294,6 +294,14 @@ public class CodeGen implements CodeGenerator {
                     loop_cond_jump_for();
                     break;
 
+                case "statement_add1":
+                    statement_add1();
+                    break;
+
+                case "statement_sub1":
+                    statement_sub1();
+                    break;
+
                 case "finish_loop":
                     finish_loop();
                     break;
@@ -306,6 +314,42 @@ public class CodeGen implements CodeGenerator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void statement_add1() throws CoolCompileError {
+        String id = Lexer.STP;
+        Data registerAddress;
+        if (currentScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.symbolTable.get(id);
+        } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.previousScope.symbolTable.get(id);
+        } else {
+            throw new CoolCompileError("id not defined");
+        }
+        String newRegisterValue = RegisterPool.getTemp();
+        code.append("lw ").append(newRegisterValue).append(",  ").append(registerAddress.address).append("\n");
+
+        code.append("addi ").append(newRegisterValue).append(",  ").append(newRegisterValue).append(",  ").append(1).append("\n");
+
+        code.append("sw ").append(newRegisterValue).append(",  ").append(registerAddress.address).append("\n");
+    }
+
+    private void statement_sub1() throws CoolCompileError {
+        String id = Lexer.STP;
+        Data registerAddress;
+        if (currentScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.symbolTable.get(id);
+        } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
+            registerAddress = currentScope.previousScope.symbolTable.get(id);
+        } else {
+            throw new CoolCompileError("id not defined");
+        }
+        String newRegisterValue = RegisterPool.getTemp();
+        code.append("lw ").append(newRegisterValue).append(",  ").append(registerAddress.address).append("\n");
+
+        code.append("addi ").append(newRegisterValue).append(",  ").append(newRegisterValue).append(",  ").append(-1).append("\n");
+
+        code.append("sw ").append(newRegisterValue).append(",  ").append(registerAddress.address).append("\n");
     }
 
     private void for_update_labeling(){
