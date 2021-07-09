@@ -1,0 +1,19 @@
+class Main {
+    let i : int;
+
+    main () : int {
+
+        let message : string;
+        let i : int;
+
+        message <- "not working ";
+        i <- 5;
+
+        if i==5 then
+            message <- "working ";
+        fi
+
+        out_string(message);
+
+    }
+}

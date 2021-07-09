@@ -1,0 +1,12 @@
+class Main {
+    let i : int;
+
+    main () : int {
+        let z : int[];
+        let res : int;
+        i <- 1;
+        z <- new Array(int, 100);
+        z[i] <- 5;
+        res <- z[i];
+    }
+}

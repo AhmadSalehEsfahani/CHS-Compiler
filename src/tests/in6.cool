@@ -1,0 +1,33 @@
+class Main {
+    let i : int;
+
+    main () : int {
+
+        let message : string;
+        let i : int;
+        let j : int;
+        let list : int[];
+
+        list <- new Array(int, 5);
+
+
+        for (i <- 0; i < 5; i <- i+1)
+            list[i] <- i * 5;
+        rof
+
+
+        out_string("elements are : \n");
+
+        for (j <- 0; j < 5; j <- j+1)
+             out_int(list[j]);
+             if j != 4 then
+                 i <- 0;
+                 while i < 5 loop
+                    out_string("*");
+                    ++i;
+                 pool
+             fi
+        rof
+
+    }
+}
