@@ -72,7 +72,6 @@ public class CodeGen implements CodeGenerator {
 
                 case "backScope":
                     currentScope = currentScope.previousScope;
-                    code.append("jr $ra \n");
                     break;
 
                 case "checkAndPushVarId":
@@ -347,6 +346,8 @@ public class CodeGen implements CodeGenerator {
         if (!calleeMethod.returnType.equals("void")) {
             throw new CoolCompileError("return type of method should be void");
         }
+
+        code.append("jr $ra \n");
     }
 
     private void checkReturnMethod() throws CoolCompileError {
@@ -366,6 +367,8 @@ public class CodeGen implements CodeGenerator {
                 }
                 break;
         }
+
+        code.append("jr $ra \n");
     }
 
     private void statement_add1() throws CoolCompileError {
