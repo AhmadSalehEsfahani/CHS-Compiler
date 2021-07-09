@@ -47,7 +47,10 @@ public class CodeGen implements CodeGenerator {
     private Data globalData;
     private int literalCounter = 1;
     private int codeLabelingCounter = 1;
+
     private static int linesLabelNumber = 0;
+    private String calleeMethodNameAddress;
+    private int methodArgumentsCount = 0;
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -69,6 +72,7 @@ public class CodeGen implements CodeGenerator {
 
                 case "backScope":
                     currentScope = currentScope.previousScope;
+                    code.append("jr $ra \n");
                     break;
 
                 case "checkAndPushVarId":
@@ -229,12 +233,10 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "add1After":
-                    //TODO handle this in graph
                     add1After();
                     break;
 
                 case "sub1After":
-                    //TODO handle this in graph
                     sub1After();
                     break;
 
@@ -309,10 +311,60 @@ public class CodeGen implements CodeGenerator {
                 case "finalize":
                     finalActions();
                     break;
+
+                case "casting":
+                    casting();
+                    break;
+
+                case "findMethodName":
+                    findMethodName();
+                    break;
+
+                case "addMethodArgument":
+                    addMethodArgument();
+                    break;
+
+                case "callMethod":
+                    callMethod();
+                    break;
+
+                case "checkReturnMethod":
+                    checkReturnMethod();
+                    break;
+
+                case "checkVoidReturnMethod":
+                    checkVoidReturnMethod();
+                    break;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void checkVoidReturnMethod() throws CoolCompileError {
+        Method calleeMethod = (Method) currentScope.previousScope.symbolTable.get(calleeMethodNameAddress);
+        if (!calleeMethod.returnType.equals("void")) {
+            throw new CoolCompileError("return type of method should be void");
+        }
+    }
+
+    private void checkReturnMethod() throws CoolCompileError {
+        String top = semanticStack.pop();
+        Method calleeMethod = (Method) currentScope.previousScope.symbolTable.get(calleeMethodNameAddress);
+        switch (calleeMethod.returnType) {
+            case "int":
+            case "bool":
+                if (top.charAt(1) != 't') {
+                    throw new CoolCompileError("Different return type of method");
+                }
+                break;
+
+            case "real":
+                if (top.charAt(1) != 'f') {
+                    throw new CoolCompileError("Different return type of method");
+                }
+                break;
         }
     }
 
@@ -352,7 +404,7 @@ public class CodeGen implements CodeGenerator {
         code.append("sw ").append(newRegisterValue).append(",  ").append(registerAddress.address).append("\n");
     }
 
-    private void for_update_labeling(){
+    private void for_update_labeling() {
         int indexBranchToHere = Integer.parseInt(semanticStack.pop());
         String updateLabel = semanticStack.pop();
         String index = semanticStack.pop();
@@ -363,13 +415,13 @@ public class CodeGen implements CodeGenerator {
 
         code.append("b ").append(forLabel).append("\n");
         code.append(hereLabel).append(":").append("\n");
-        code.replace(indexBranchToHere, indexBranchToHere+1, "b " + hereLabel);
+        code.replace(indexBranchToHere, indexBranchToHere + 1, "b " + hereLabel);
 
         semanticStack.push(updateLabel);
         semanticStack.push(index);
     }
 
-    private void loop_cond_jump_for(){
+    private void loop_cond_jump_for() {
         String expr = semanticStack.pop();
 
         String beginUpdate = BEGIN_UPDATE_LABEL + codeLabelingCounter;
@@ -379,11 +431,71 @@ public class CodeGen implements CodeGenerator {
         code.append("b").append("\n");
         code.append(beginUpdate).append(":").append("\n");
         String lastIndex = String.valueOf(code.lastIndexOf("beqz "));
-        String lastBIndex =  String.valueOf(code.lastIndexOf("b"));
+        String lastBIndex = String.valueOf(code.lastIndexOf("b"));
         RegisterPool.backTemp(expr);
         semanticStack.push(lastIndex);
         semanticStack.push(beginUpdate);
         semanticStack.push(lastBIndex);
+    }
+
+    private void findMethodName() {
+        calleeMethodNameAddress = "MainAND" + Lexer.STP;
+        methodArgumentsCount = 0;
+    }
+
+    private void addMethodArgument() {
+        methodArgumentsCount++;
+    }
+
+    private void callMethod() {
+        Method calleeMethod = (Method) currentScope.previousScope.symbolTable.get(calleeMethodNameAddress);
+
+        for (String key : calleeMethod.symbolTable.keySet()) {
+            VarType varType = (VarType) calleeMethod.symbolTable.get(key);
+            if (varType.isInput && methodArgumentsCount-- > 0) {
+                String topExpr = semanticStack.pop();
+                code.append("sw ").append(topExpr).append(" , ").append(varType.address).append("\n");
+
+                if (topExpr.charAt(1) == 't') {
+                    RegisterPool.backTemp(topExpr);
+                } else if (topExpr.charAt(1) == 'f') {
+                    RegisterPool.backFloat(topExpr);
+                }
+            }
+        }
+        code.append("jal ").append(calleeMethodNameAddress).append("\n");
+    }
+
+    private void casting() {
+        String numberRegister = semanticStack.pop();
+        String typeString = semanticStack.pop();
+
+        switch (typeString) {
+            case "int":
+                if (numberRegister.charAt(1) == 't') { //current number is integer
+                    semanticStack.push(numberRegister);
+                } else if (numberRegister.charAt(1) == 'f') {
+                    String tempRegister = RegisterPool.getTemp();
+                    code.append("cvt.w.s ").append(tempRegister).append(" , ").append(numberRegister).append("\n");
+                    semanticStack.push(tempRegister);
+                }
+                break;
+
+            case "real":
+                if (numberRegister.charAt(1) == 't') { //current number is float
+                    String floatRegister = RegisterPool.getFloat();
+                    code.append("cvt.s.w ").append(floatRegister).append(" , ").append(numberRegister).append("\n");
+                    semanticStack.push(floatRegister);
+                } else if (numberRegister.charAt(1) == 'f') {
+                    semanticStack.push(numberRegister);
+                }
+                break;
+
+            case "bool":
+                semanticStack.push(numberRegister);
+                break;
+        }
+
     }
 
     private void finish_loop() {
