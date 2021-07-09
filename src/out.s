@@ -5,8 +5,10 @@ MainANDi: .word 0
 mainANDmessage: .word 0
 mainANDi: .word 0
 mainANDj: .word 0
-literalAND1 : .asciiz "j = "
-literalAND2 : .asciiz "i = "
+mainANDlist: .space 20
+mainANDlistANDsize: .word 5
+literalAND1 : .asciiz "elements are : \n"
+literalAND2 : .asciiz " + "
 
 .text
 .globl main
@@ -36,47 +38,74 @@ syscall
 jr $ra
 exception: 
 main:
-la $t0, mainANDi
-li $t1, 5
-sw $t1, ($t0)
-la $t2, mainANDj
-li $t3, 0
-sw $t3, ($t2)
+la $t0, mainANDlist
+la $t1, mainANDi
+li $t2, 0
+sw $t2, ($t1)
 loop1: 
-lw $t4, mainANDi
-li $t5, 0
-slt $t5,  $t5,  $t4
-beqz $t5, pool2
-la $t6, mainANDj
-lw $t7, mainANDj
-li $t8, 1
-add $t8,  $t8,  $t7
-sw $t8, ($t6)
-la $t9, mainANDi
-lw $t1, mainANDi
-li $t0, 1
-sub $t0,  $t0,  $t1
-sw $t0, ($t9)
+lw $t3, mainANDi
+li $t4, 5
+slt $t4,  $t3,  $t4
+beqz $t4, pool4
+b BEGIN_STATEMENT3
+BEGIN_UPDATE2:
+la $t5, mainANDi
+lw $t6, mainANDi
+li $t7, 1
+add $t7,  $t6,  $t7
+sw $t7, ($t5)
 b loop1
-pool2: 
-la $t3, mainANDmessage
+BEGIN_STATEMENT3:
+la $t8, mainANDlist
+lw $t9, mainANDi
+lw $t2, mainANDlistANDsize
+sge $t1, $t9, $t2
+slt $t1, $t9, 0
+beq $t1, 1, exception
+mul $t9, $t9, 4
+add $t8, $t8, $t9
+lw $t3, mainANDi
+li $t4, 5
+mulo $t4,  $t3,  $t4
+sw $t4, ($t8)
+b BEGIN_UPDATE2
+pool4: 
 la $s0, literalAND1
-sw $s0, ($t3)
-lw $s1, mainANDmessage
-move $a0, $s1
+move $a0, $s0
 jal print_string
-lw $t2, mainANDj
-move $a0, $t2
-jal print_int
-la $t4, mainANDmessage
-la $s2, literalAND2
-sw $s2, ($t4)
-lw $s3, mainANDmessage
-move $a0, $s3
-jal print_string
-lw $t5, mainANDi
+la $t6, mainANDj
+li $t7, 0
+sw $t7, ($t6)
+loop5: 
+lw $t5, mainANDj
+li $t2, 5
+slt $t2,  $t5,  $t2
+beqz $t2, pool8
+b BEGIN_STATEMENT7
+BEGIN_UPDATE6:
+la $t1, mainANDj
+lw $t9, mainANDj
+li $t3, 1
+add $t3,  $t9,  $t3
+sw $t3, ($t1)
+b loop5
+BEGIN_STATEMENT7:
+la $s1, mainANDlist
+lw $t4, mainANDj
+lw $t7, mainANDlistANDsize
+sge $t6, $t4, $t7
+slt $t6, $t4, 0
+beq $t6, 1, exception
+mul $t4, $t4, 4
+add $s1, $s1, $t4
+lw $t5, ($s1)
 move $a0, $t5
 jal print_int
+la $s2, literalAND2
+move $a0, $s2
+jal print_string
+b BEGIN_UPDATE6
+pool8: 
 termination: 
 li $v0, 10
 li $t0, 0

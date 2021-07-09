@@ -37,6 +37,8 @@ public class CodeGen implements CodeGenerator {
     private final static String ELSE_LABEL = "else";
     private final static String BEGIN_LOOP_LABEL = "loop";
     private final static String END_LOOP_LABEL = "pool";
+    private final static String BEGIN_UPDATE_LABEL = "BEGIN_UPDATE";
+    private final static String BEGIN_STATEMENT = "BEGIN_STATEMENT";
 
     private boolean inMethodInputDCL = false;
     private boolean inArrayDCL = false;
@@ -284,6 +286,14 @@ public class CodeGen implements CodeGenerator {
                     loop_cond_jump();
                     break;
 
+                case "for_update_labeling":
+                    for_update_labeling();
+                    break;
+
+                case "loop_cond_jump_for":
+                    loop_cond_jump_for();
+                    break;
+
                 case "finish_loop":
                     finish_loop();
                     break;
@@ -296,6 +306,40 @@ public class CodeGen implements CodeGenerator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void for_update_labeling(){
+        int indexBranchToHere = Integer.parseInt(semanticStack.pop());
+        String updateLabel = semanticStack.pop();
+        String index = semanticStack.pop();
+        String forLabel = semanticStack.pop();
+
+        String hereLabel = BEGIN_STATEMENT + codeLabelingCounter;
+        codeLabelingCounter++;
+
+        code.append("b ").append(forLabel).append("\n");
+        code.append(hereLabel).append(":").append("\n");
+        code.replace(indexBranchToHere, indexBranchToHere+1, "b " + hereLabel);
+
+        semanticStack.push(updateLabel);
+        semanticStack.push(index);
+    }
+
+    private void loop_cond_jump_for(){
+        String expr = semanticStack.pop();
+
+        String beginUpdate = BEGIN_UPDATE_LABEL + codeLabelingCounter;
+        codeLabelingCounter++;
+
+        code.append("beqz ").append(expr).append(", ").append("\n");
+        code.append("b").append("\n");
+        code.append(beginUpdate).append(":").append("\n");
+        String lastIndex = String.valueOf(code.lastIndexOf("beqz "));
+        String lastBIndex =  String.valueOf(code.lastIndexOf("b"));
+        RegisterPool.backTemp(expr);
+        semanticStack.push(lastIndex);
+        semanticStack.push(beginUpdate);
+        semanticStack.push(lastBIndex);
     }
 
     private void finish_loop() {
