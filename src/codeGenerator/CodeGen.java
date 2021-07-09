@@ -357,7 +357,7 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void checkReturnMethod() throws CoolCompileError {
-        String top = semanticStack.pop();
+        String top = semanticStack.peek();
         Method calleeMethod = (Method) currentScope.previousScope.symbolTable.get(calleeMethodNameAddress);
         switch (calleeMethod.returnType) {
             case "int":
