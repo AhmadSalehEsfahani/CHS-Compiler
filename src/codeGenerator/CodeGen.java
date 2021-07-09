@@ -45,6 +45,7 @@ public class CodeGen implements CodeGenerator {
     private Data globalData;
     private int literalCounter = 1;
     private int codeLabelingCounter = 1;
+    private static int linesLabelNumber = 0;
 
     private Stack<String> semanticStack = new Stack<>();
 
@@ -170,27 +171,27 @@ public class CodeGen implements CodeGenerator {
                     break;
 
                 case "equality":
-                    compressionFunction("seq", "");
+                    compressionFunction("seq", "c.eq.s");
                     break;
 
                 case "notEquality":
-                    compressionFunction("sne", "");
+                    compressionFunction("sne", "c.ne.s"); //check
                     break;
 
                 case "greaterThan":
-                    compressionFunction("sgt", "");
+                    compressionFunction("sgt", "c.gt.s"); //check
                     break;
 
                 case "greaterThanEqual":
-                    compressionFunction("sge", "");
+                    compressionFunction("sge", "c.ge.s");//check
                     break;
 
                 case "lessThan":
-                    compressionFunction("slt", "");
+                    compressionFunction("slt", "c.lt.s");
                     break;
 
                 case "lessThanEqual":
-                    compressionFunction("sle", "");
+                    compressionFunction("sle", "c.le.s");
                     break;
 
                 case "addExpr":
@@ -297,19 +298,19 @@ public class CodeGen implements CodeGenerator {
         }
     }
 
-    private void finish_loop(){
+    private void finish_loop() {
         int index = Integer.parseInt(semanticStack.pop());
         String loopLabel = semanticStack.pop();
 
         String endLabel = END_LOOP_LABEL + codeLabelingCounter;
         codeLabelingCounter++;
 
-        code.replace(index, index+10, code.substring(index, index+10)+endLabel);
+        code.replace(index, index + 10, code.substring(index, index + 10) + endLabel);
         code.append("b ").append(loopLabel).append("\n");
         code.append(endLabel).append(": ").append("\n");
     }
 
-    private void loop_cond_jump(){
+    private void loop_cond_jump() {
         String expr = semanticStack.pop();
 
         code.append("beqz ").append(expr).append(", ").append("\n");
@@ -318,27 +319,27 @@ public class CodeGen implements CodeGenerator {
         semanticStack.push(lastIndex);
     }
 
-    private void label_and_push(){
+    private void label_and_push() {
         String label = BEGIN_LOOP_LABEL + codeLabelingCounter;
         codeLabelingCounter++;
         code.append(label).append(": \n");
         semanticStack.push(label);
     }
 
-    private void else_jump_comp(){
+    private void else_jump_comp() {
         int index = Integer.parseInt(semanticStack.pop());
         String label = END_ELSE_LABEL + codeLabelingCounter;
         codeLabelingCounter++;
         code.append(label).append(":").append("\n");
-        code.replace(index, index+2, code.substring(index, index+2)+label);
+        code.replace(index, index + 2, code.substring(index, index + 2) + label);
     }
 
-    private void else_jump(){
+    private void else_jump() {
         int indexIfJump = Integer.parseInt(semanticStack.pop());
         String hereLabel = ELSE_LABEL + codeLabelingCounter;
         codeLabelingCounter++;
 
-        code.replace(indexIfJump, indexIfJump+10, code.substring(indexIfJump, indexIfJump+10)+hereLabel);
+        code.replace(indexIfJump, indexIfJump + 10, code.substring(indexIfJump, indexIfJump + 10) + hereLabel);
 
         code.append("b ").append("\n");
         code.append(hereLabel).append(":").append("\n");
@@ -346,15 +347,15 @@ public class CodeGen implements CodeGenerator {
         semanticStack.push(index);
     }
 
-    private void comp_if_jump(){
+    private void comp_if_jump() {
         int jump_index = Integer.parseInt(semanticStack.pop());
         String addrOfHere = END_IF_LABEL + codeLabelingCounter;
         codeLabelingCounter++;
         code.append(addrOfHere).append(": \n");
-        code.replace(jump_index, jump_index+10, code.substring(jump_index, jump_index+10)+addrOfHere);
+        code.replace(jump_index, jump_index + 10, code.substring(jump_index, jump_index + 10) + addrOfHere);
     }
 
-    private void if_jump(){
+    private void if_jump() {
         String expr = semanticStack.pop();
         code.append("beqz ").append(expr).append(", ").append("\n");
         String lastIndex = String.valueOf(code.lastIndexOf("beqz "));
@@ -362,16 +363,16 @@ public class CodeGen implements CodeGenerator {
         semanticStack.push(lastIndex);
     }
 
-    private void read_float(){
+    private void read_float() {
         code.append("jal ").append(READ_FLOAT_LABEL).append("\n");
         String reg = RegisterPool.getFloat();
         code.append("mov.s ").append(reg).append(", ").append("$f0").append("\n");
         semanticStack.push(reg);
     }
 
-    private void read_string(){
+    private void read_string() {
         String address = "literalAND" + literalCounter;
-        literalCounter ++;
+        literalCounter++;
         data.append(address).append(": .space ").append(STRING_MAX_SIZE).append("\n");
         code.append("la $a0, ").append(address).append("\n");
         code.append("li $a1, ").append(STRING_MAX_SIZE).append("\n");
@@ -381,7 +382,7 @@ public class CodeGen implements CodeGenerator {
         semanticStack.push(regAddr);
     }
 
-    private void read_int(){
+    private void read_int() {
         code.append("jal ").append(READ_INT_LABEL).append("\n");
         String reg = RegisterPool.getTemp();
         code.append("move ").append(reg).append(", ").append("$v0 ").append("\n");
@@ -390,7 +391,7 @@ public class CodeGen implements CodeGenerator {
 
     private void print_float() throws CoolCompileError {
         String expr = semanticStack.pop();
-        if(!expr.contains("$f")){
+        if (!expr.contains("$f")) {
             throw new CoolCompileError("it is not float in out_float");
         }
         code.append("mov.s $f12, ").append(expr).append("\n");
@@ -400,7 +401,7 @@ public class CodeGen implements CodeGenerator {
 
     private void print_string() throws CoolCompileError {
         String strReg = semanticStack.pop();
-        if(!strReg.contains("$s")){
+        if (!strReg.contains("$s")) {
             throw new CoolCompileError("it is not string in print_string");
         }
         code.append("move $a0, ").append(strReg).append("\n");
@@ -410,7 +411,7 @@ public class CodeGen implements CodeGenerator {
 
     private void print_int() throws CoolCompileError {
         String expr = semanticStack.pop();
-        if(!expr.contains("$t")){
+        if (!expr.contains("$t")) {
             throw new CoolCompileError("it is not int in print_int");
         }
         code.append("move $a0, ").append(expr).append("\n");
@@ -448,7 +449,7 @@ public class CodeGen implements CodeGenerator {
 
         int begin = data.indexOf(array.address + ": .space 0");
         int size = (array.address + ": .space 0").length();
-        data.replace(begin, begin + size, array.address + ": .space " + Integer.parseInt(arraySize)*4);
+        data.replace(begin, begin + size, array.address + ": .space " + Integer.parseInt(arraySize) * 4);
 
         begin = data.indexOf(array.address + "ANDsize: .word 0");
         size = (array.address + "ANDsize: .word 0").length();
@@ -634,11 +635,23 @@ public class CodeGen implements CodeGenerator {
                 throw new CoolCompileError("type of two operand is different");
             }
             if (topRegister1.charAt(1) == 'f') {
-                //TODO add branch compare for flout numbers
+                String tempRegister = RegisterPool.getTemp();
+                code.append("ori ").append(tempRegister).append(",  ")
+                        .append(tempRegister).append(",  ").append(1).append("\n"); //create temp register is true
+
+
                 code.append(floatOperator).append(" ").append(topRegister1).append(",  ")
-                        .append(topRegister1).append(",  ").append(topRegister2).append("\n");
+                        .append(topRegister2).append(",  ").append(topRegister1).append("\n");
 
+                String lineLabel = "myLineLabel" + linesLabelNumber++;
+                code.append("bczt ").append(lineLabel).append(" ").append("\n");
 
+                code.append("andi ").append(tempRegister).append(",  ")
+                        .append(tempRegister).append(",  ").append(0).append("\n"); //make temp register is false
+
+                code.append(lineLabel).append(": ");
+
+                semanticStack.push(tempRegister);
             } else {
                 throw new CoolCompileError("otherwise f type are illegal");
             }
@@ -670,12 +683,12 @@ public class CodeGen implements CodeGenerator {
 
         if (floatOperator != null && topRegister1.charAt(1) == 'f') {
             code.append(floatOperator).append(" ").append(topRegister1).append(",  ")
-                    .append(topRegister1).append(",  ").append(topRegister2).append("\n");
+                    .append(topRegister2).append(",  ").append(topRegister1).append("\n");
 
         } else {
             if (topRegister1.charAt(1) == 't') {
                 code.append(integerOperator).append(" ").append(topRegister1).append(",  ")
-                        .append(topRegister1).append(",  ").append(topRegister2).append("\n");
+                        .append(topRegister2).append(",  ").append(topRegister1).append("\n");
             } else {
                 throw new CoolCompileError("otherwise f,t type are illegal");
             }
@@ -774,7 +787,7 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void assignment() throws CoolCompileError {
-        if (newArrayInRight){
+        if (newArrayInRight) {
             String left = semanticStack.pop();
             RegisterPool.backSavedTemp(left);
             newArrayInRight = false;
