@@ -489,17 +489,22 @@ public class CodeGen implements CodeGenerator {
             case "int":
                 if (numberRegister.charAt(1) == 't') { //current number is integer
                     semanticStack.push(numberRegister);
-                } else if (numberRegister.charAt(1) == 'f') {
+                } else if (numberRegister.charAt(1) == 'f') { //current number is float
+                    code.append("cvt.w.s ").append(numberRegister).append(" , ").append(numberRegister).append("\n");
+
                     String tempRegister = RegisterPool.getTemp();
-                    code.append("cvt.w.s ").append(tempRegister).append(" , ").append(numberRegister).append("\n");
+                    code.append("mfc1 ").append(tempRegister).append(" , ").append(numberRegister).append("\n");
                     semanticStack.push(tempRegister);
                 }
                 break;
 
             case "real":
-                if (numberRegister.charAt(1) == 't') { //current number is float
+                if (numberRegister.charAt(1) == 't') { //current number is integer
                     String floatRegister = RegisterPool.getFloat();
-                    code.append("cvt.s.w ").append(floatRegister).append(" , ").append(numberRegister).append("\n");
+
+                    code.append("mtc1 ").append(numberRegister).append(" , ").append(floatRegister).append("\n");
+
+                    code.append("cvt.s.w ").append(floatRegister).append(" , ").append(floatRegister).append("\n");
                     semanticStack.push(floatRegister);
                 } else if (numberRegister.charAt(1) == 'f') {
                     semanticStack.push(numberRegister);
