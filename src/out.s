@@ -150,6 +150,7 @@ pool8:
 b BEGIN_UPDATE2
 pool9: 
 li $t9, 1
+jr $ra 
 main:
 la $t8, MainANDlist
 la $t3, MainANDn
@@ -187,6 +188,7 @@ sw $t7, ($t6)
 b BEGIN_UPDATE11
 pool13: 
 la $t1, mainANDt
+jal MainANDbubbleSort
 sw $t1, ($t9)
 lw $t5, mainANDt
 move $a0, $t5

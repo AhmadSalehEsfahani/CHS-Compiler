@@ -23,6 +23,7 @@ public class CodeGen implements CodeGenerator {
     private Scope topMostScope = new Scope("TOP", "program", null, null);
     private Scope MainScope = new Scope("Main", "class", "Main", topMostScope);
     private Scope currentScope = MainScope;
+
     {
         topMostScope.symbolTable.put("Main", MainScope);
     }
@@ -348,7 +349,7 @@ public class CodeGen implements CodeGenerator {
     }
 
     private void checkVoidReturnMethod() throws CoolCompileError {
-        Method calleeMethod = (Method) currentScope.previousScope.symbolTable.get(calleeMethodNameAddress);
+        Method calleeMethod = (Method) currentScope;
         if (!calleeMethod.returnType.equals("void")) {
             throw new CoolCompileError("return type of method should be void");
         }
@@ -358,7 +359,7 @@ public class CodeGen implements CodeGenerator {
 
     private void checkReturnMethod() throws CoolCompileError {
         String top = semanticStack.peek();
-        Method calleeMethod = (Method) currentScope.previousScope.symbolTable.get(calleeMethodNameAddress);
+        Method calleeMethod = (Method) currentScope;
         switch (calleeMethod.returnType) {
             case "int":
             case "bool":
@@ -459,16 +460,18 @@ public class CodeGen implements CodeGenerator {
     private void callMethod() {
         Method calleeMethod = (Method) currentScope.previousScope.symbolTable.get(calleeMethodNameAddress);
 
-        for (String key : calleeMethod.symbolTable.keySet()) {
-            VarType varType = (VarType) calleeMethod.symbolTable.get(key);
-            if (varType.isInput && methodArgumentsCount-- > 0) {
-                String topExpr = semanticStack.pop();
-                code.append("sw ").append(topExpr).append(" , ").append(varType.address).append("\n");
+        if (methodArgumentsCount > 0) {
+            for (String key : calleeMethod.symbolTable.keySet()) {
+                VarType varType = (VarType) calleeMethod.symbolTable.get(key);
+                if (varType.isInput && methodArgumentsCount-- > 0) {
+                    String topExpr = semanticStack.pop();
+                    code.append("sw ").append(topExpr).append(" , ").append(varType.address).append("\n");
 
-                if (topExpr.charAt(1) == 't') {
-                    RegisterPool.backTemp(topExpr);
-                } else if (topExpr.charAt(1) == 'f') {
-                    RegisterPool.backFloat(topExpr);
+                    if (topExpr.charAt(1) == 't') {
+                        RegisterPool.backTemp(topExpr);
+                    } else if (topExpr.charAt(1) == 'f') {
+                        RegisterPool.backFloat(topExpr);
+                    }
                 }
             }
         }
@@ -694,9 +697,9 @@ public class CodeGen implements CodeGenerator {
             globalData = currentScope.symbolTable.get(id);
         } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
             globalData = currentScope.previousScope.symbolTable.get(id);
-        }else if (currentScope.previousScope.previousScope.symbolTable.containsKey(id)) {
+        } else if (currentScope.previousScope.previousScope.symbolTable.containsKey(id)) {
             return;
-        }else {
+        } else {
             throw new CoolCompileError("id not defined");
         }
         if (globalData.type.equals("array"))
@@ -714,7 +717,7 @@ public class CodeGen implements CodeGenerator {
             assignVarToReg(currentScope.symbolTable.get(id));
         } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
             assignVarToReg(currentScope.previousScope.symbolTable.get(id));
-        }else if (currentScope.previousScope.previousScope.symbolTable.containsKey(id)) {
+        } else if (currentScope.previousScope.previousScope.symbolTable.containsKey(id)) {
             return;
         } else {
             throw new CoolCompileError("id not defined");
