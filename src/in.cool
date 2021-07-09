@@ -1,32 +1,43 @@
 class Main {
     let i : int;
+    let j : int;
+    let n : int;
+    let list : int[];
+
+    bubbleSort() : int {
+        for (i <- 0 ; i < n-1 ; i <- i+1)
+            for (j <- 0 ; j < n-i-1 ; j <- j+1)
+                if list[j] > list[j+1] then
+                   let t : int;
+                   t <- list[j];
+                   list[j] <- list[j+1];
+                   list[j+1] <- t;
+                fi
+            rof
+        rof
+
+        return 1;
+    }
 
     main () : int {
 
-        let message : string;
-        let i : int;
-        let j : int;
-        let list : int[];
+        let t : int;
 
-        list <- new Array(int, 5);
+        list <- new Array(int, 100);
 
+        n <- in_int();
 
-        for (i <- 0; i < 5; i <- i+1)
-            list[i] <- i * 5;
+        for (i <- 0; i < n ; i <- i+1)
+            list[i] <- in_int();
         rof
 
+        t <- Main.bubbleSort();
+        out_int(t);
 
-        out_string("elements are : \n");
-
-        for (j <- 0; j < 5; j <- j+1)
-             out_int(list[j]);
-             if j != 4 then
-                 i <- 0;
-                 while i < 5 loop
-                    out_string("*");
-                    ++i;
-                 pool
-             fi
+        out_string("sorted result is : ");
+        for (i <- 0; i < n ; i <- i+1)
+            out_int(list[i]);
+            out_string(" ");
         rof
 
     }

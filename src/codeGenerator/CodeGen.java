@@ -20,8 +20,13 @@ public class CodeGen implements CodeGenerator {
             , "out_string", "new", "break", "continue", "loop", "pool", "in_int", "out_int"
             , "then", "len", "true", "false"};
 
-    private Scope topMostScope = new Scope("Main", "class", "Main", null);
-    private Scope currentScope = topMostScope;
+    private Scope topMostScope = new Scope("TOP", "program", null, null);
+    private Scope MainScope = new Scope("Main", "class", "Main", topMostScope);
+    private Scope currentScope = MainScope;
+    {
+        topMostScope.symbolTable.put("Main", MainScope);
+    }
+
 
     //common routines name
     private final static String EXCEPTION_ROUTINE_LABEL = "exception";
@@ -32,6 +37,7 @@ public class CodeGen implements CodeGenerator {
     private final static String READ_FLOAT_LABEL = "read_float";
     private final static String READ_STRING_LABEL = "read_string";
     private final static String STRING_MAX_SIZE = "20";
+    //common labels
     private final static String END_IF_LABEL = "fi";
     private final static String END_ELSE_LABEL = "esle";
     private final static String ELSE_LABEL = "else";
@@ -688,7 +694,9 @@ public class CodeGen implements CodeGenerator {
             globalData = currentScope.symbolTable.get(id);
         } else if (currentScope.previousScope.symbolTable.containsKey(id)) {
             globalData = currentScope.previousScope.symbolTable.get(id);
-        } else {
+        }else if (currentScope.previousScope.previousScope.symbolTable.containsKey(id)) {
+            return;
+        }else {
             throw new CoolCompileError("id not defined");
         }
         if (globalData.type.equals("array"))
